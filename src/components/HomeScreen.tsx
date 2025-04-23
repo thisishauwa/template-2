@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { ChevronRight, Flame, TrendingUp, Star, ListFilter, Bookmark } from 'lucide-react';
 import { Movie } from '@/types/movie';
+import { getTMDBImageUrl } from '@/lib/utils';
 
 interface HomeScreenProps {
   onStartSwipe: () => void;
@@ -221,7 +222,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
                 >
                   <div className="relative aspect-[2/3] mb-2">
                     <Image 
-                      src={movie.poster_path || '/placeholder-poster.jpg'} 
+                      src={getTMDBImageUrl(movie.poster_path)}
                       alt={movie.title}
                       fill
                       sizes="(max-width: 768px) 144px, 176px"
@@ -264,7 +265,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
                 >
                   <div className="relative aspect-[2/3] mb-2">
                     <Image 
-                      src={movie.poster_path || '/placeholder-poster.jpg'} 
+                      src={getTMDBImageUrl(movie.poster_path)}
                       alt={movie.title}
                       fill
                       sizes="(max-width: 768px) 144px, 176px"
@@ -304,7 +305,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
                   >
                     <div className="relative aspect-[2/3] mb-2">
                       <Image 
-                        src={movie.poster_path || '/placeholder-poster.jpg'} 
+                        src={getTMDBImageUrl(movie.poster_path)}
                         alt={movie.title}
                         fill
                         sizes="(max-width: 768px) 144px, 176px"
