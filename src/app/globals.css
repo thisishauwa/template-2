@@ -3,9 +3,9 @@
 @tailwind utilities;
 
 :root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
+  --foreground-rgb: 255, 255, 255;
+  --background-start-rgb: 13, 5, 30;
+  --background-end-rgb: 0, 0, 0;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -19,11 +19,57 @@
 body {
   color: rgb(var(--foreground-rgb));
   background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+    to bottom,
+    rgb(var(--background-start-rgb)),
+    rgb(var(--background-end-rgb))
+  );
+  min-height: 100vh;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(128, 90, 213, 0.6);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(128, 90, 213, 0.8);
+}
+
+/* Typography */
+h1, h2, h3, h4 {
+  font-family: var(--font-dm-serif);
+}
+
+/* Utility for text gradients */
+.text-gradient {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-400;
+}
+
+/* Glassmorphism */
+.glass {
+  @apply backdrop-blur-md bg-opacity-20 bg-white border border-white border-opacity-10 shadow-lg;
+}
+
+/* Animations */
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
 }
 
 @layer utilities {
