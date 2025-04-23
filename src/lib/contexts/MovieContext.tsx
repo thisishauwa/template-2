@@ -135,7 +135,7 @@ export const MovieProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         console.error('Error saving watchlist to localStorage:', error);
       }
     }
-  }, [watchlist]);
+  }, [watchlist, loading]);
 
   const fetchMovies = async (filters: MovieFilters) => {
     setLoading(true);

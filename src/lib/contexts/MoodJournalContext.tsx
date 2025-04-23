@@ -147,7 +147,7 @@ export const MoodJournalProvider: React.FC<{ children: React.ReactNode }> = ({ c
         console.error('Error saving journal entries to localStorage:', error);
       }
     }
-  }, [entries]);
+  }, [entries, loading]);
 
   // Add a new entry
   const addEntry = (entryData: Omit<MoodEntry, 'id'>) => {

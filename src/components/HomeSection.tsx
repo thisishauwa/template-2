@@ -1,17 +1,7 @@
 import React from 'react';
 import { ChevronRight } from 'lucide-react';
 import MovieCard from './MovieCard';
-
-interface Movie {
-  id: number;
-  title: string;
-  poster_path: string;
-  release_date?: string;
-  genre_ids: number[];
-  vote_average: number;
-  overview: string;
-  mood_match?: number;
-}
+import { Movie } from '@/types/movie';
 
 interface HomeSectionProps {
   title: string;
@@ -59,6 +49,9 @@ const HomeSection: React.FC<HomeSectionProps> = ({
             onSelect={onMovieSelect}
             onAddToWatchlist={onAddToWatchlist}
             isInWatchlist={isInWatchlist(movie.id)}
+            onSwipeLeft={() => {}}
+            onSwipeRight={() => {}}
+            onCardTap={onMovieSelect}
           />
         ))}
       </div>

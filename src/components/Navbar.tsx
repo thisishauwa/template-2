@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Bookmark, User, BookOpen, Home } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/hooks/useAuth';
 import Profile from './Profile';
-import Image from 'next/image';
 
 interface NavbarProps {
   onWatchlistOpen?: () => void;
@@ -117,11 +117,16 @@ const Navbar: React.FC<NavbarProps> = ({
               aria-label="Open profile"
             >
               {user && user.photoURL ? (
-                <img 
-                  src={user.photoURL} 
-                  alt={user.displayName || "User"} 
-                  className="w-8 h-8 rounded-full"
-                />
+                <div className="relative w-8 h-8 rounded-full overflow-hidden">
+                  <Image 
+                    src={user.photoURL} 
+                    alt={user.displayName || "User"} 
+                    fill
+                    className="object-cover"
+                    sizes="32px"
+                    unoptimized={false}
+                  />
+                </div>
               ) : (
                 <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-600 to-pink-500 flex items-center justify-center text-white text-sm font-medium">
                   <User size={18} />
