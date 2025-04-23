@@ -1,7 +1,6 @@
 "use client";
 
 import { useAuth } from '../lib/hooks/useAuth';
-import Image from 'next/image';
 
 export default function SignInWithGoogle() {
   const { signInWithGoogle } = useAuth();
@@ -19,11 +18,14 @@ export default function SignInWithGoogle() {
     <button
       onClick={handleSignIn}
       className="flex items-center justify-center bg-white text-gray-700 font-semibold py-2 px-4 rounded-full border border-gray-300 hover:bg-gray-100 transition duration-300 ease-in-out"
+      aria-label="Sign in with Google"
     >
       <svg 
         className="w-6 h-6 mr-2" 
         viewBox="0 0 24 24" 
         xmlns="http://www.w3.org/2000/svg"
+        aria-hidden="true"
+        role="img"
       >
         <path
           fill="#4285F4"

@@ -70,7 +70,7 @@ const MoodSelector: React.FC<MoodSelectorProps> = ({
               <p>Films that transport you back to cherished times</p>
             )}
             {selectedMood === 'chill' && (
-              <p>Easy-watching films that don&apos;t demand too much emotional energy</p>
+              <p>Easy-watching films that do not demand too much emotional energy</p>
             )}
             {selectedMood === 'romantic' && (
               <p>Love stories that make your heart flutter</p>

@@ -13,7 +13,7 @@ const NoRecommendations: React.FC<NoRecommendationsProps> = ({ onAdjustFilters }
       <h2 className="text-2xl font-bold mb-3 text-white">No matches found</h2>
       
       <p className="text-gray-300 mb-8">
-        We couldn&apos;t find any movies matching your current combination of mood, genres, and decades.
+        We could not find any movies matching your current combination of mood, genres, and decades.
         Try adjusting your filters for better results.
       </p>
       

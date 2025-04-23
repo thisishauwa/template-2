@@ -255,7 +255,7 @@ const MoodJournal: React.FC<MoodJournalProps> = ({ onViewMoodRecommendations }) 
               {/* Removed mood chips here */}
               
               <p className="text-sm text-gray-400">
-                Based on your journal, you&apos;ve most frequently felt{' '}
+                Based on your journal, you have most frequently felt{' '}
                 <button 
                   onClick={() => moodFrequency[0]?.mood && handleGetRecommendations(moodFrequency[0].mood)}
                   className="text-primary-light font-medium hover:underline focus:outline-none"
@@ -351,7 +351,7 @@ const MoodJournal: React.FC<MoodJournalProps> = ({ onViewMoodRecommendations }) 
           )}
           
           {entries.length === 0 ? (
-            <p className="text-gray-400">No entries yet. Start by recording today&apos;s mood!</p>
+            <p className="text-gray-400">No entries yet. Start by recording todays mood!</p>
           ) : currentEntries.length === 0 ? (
             <div className="p-8 text-center bg-gray-800/50 rounded-lg">
               <p className="text-gray-400">No entries match your current filters.</p>

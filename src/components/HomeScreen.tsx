@@ -178,7 +178,8 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
             Feeling things?
           </h1>
           <p className="text-lg md:text-xl text-gray-300 mb-8 max-w-lg mx-auto">
-            Same. Let&apos;s find the right film for right now.
+            Same. Find the right film for right now.
+          
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <button

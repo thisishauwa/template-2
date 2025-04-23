@@ -262,7 +262,8 @@ const FeelingFlicksApp: React.FC = () => {
     const fetchParamsString = JSON.stringify({
       mood,
       genres: [],
-      decades: []
+      decades: [],
+      watchlist // Include watchlist as a parameter so it's tracked in the dependency
     });
     
     // Only fetch if parameters have changed
