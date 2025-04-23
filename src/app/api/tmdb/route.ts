@@ -168,8 +168,141 @@ const WATCH_CONTEXT_MAPPINGS: Record<string, WatchContextParameters> = {
 // Function to get movies based on genre, year, and other filters
 export async function POST(request: Request) {
   try {
-    const { mood, genres, decades, watchingWith } = await request.json();
+    const { mood, genres, decades, watchingWith, useAndLogic = false } = await request.json();
+    console.log('Received filters:', { mood, genres, decades, watchingWith, useAndLogic });
     
+    // Create URL parameters for TMDB API
+    const params = new URLSearchParams();
+    
+    // Basic parameters
+    params.append('api_key', process.env.TMDB_API_KEY || '');
+    params.append('language', 'en-US');
+    params.append('include_adult', 'false');
+    params.append('vote_count.gte', '50'); // Some minimum vote count for quality
+    params.append('sort_by', 'vote_average.desc'); // Sort by highest rated
+
+    // Handle filtering logic - AND vs OR
+    if (useAndLogic) {
+      // Use AND logic - all conditions must match
+      
+      // For AND logic with genres, we need to add all genre IDs as separate parameters
+      if (genres && genres.length > 0) {
+        // When using AND logic, we need to append each genre_id individually
+        genres.forEach((genreId: number) => {
+          params.append('with_genres', genreId.toString());
+        });
+      }
+      
+      // For decades in AND logic, we can only use a single date range
+      if (decades && decades.length > 0) {
+        // With AND logic, we have to use the broadest date range 
+        // (earliest start to latest end)
+        const yearRanges = decades.map((decade: string) => {
+          const startYear = parseInt(decade.replace('s', ''));
+          return { 
+            start: startYear, 
+            end: startYear + 9 
+          };
+        });
+        
+        if (yearRanges.length > 0) {
+          // Find minimum start year and maximum end year
+          const minStartYear = Math.min(...yearRanges.map((range: {start: number, end: number}) => range.start));
+          const maxEndYear = Math.max(...yearRanges.map((range: {start: number, end: number}) => range.end));
+          
+          // Add primary release date filters
+          params.append('primary_release_date.gte', `${minStartYear}-01-01`);
+          params.append('primary_release_date.lte', `${maxEndYear}-12-31`);
+        }
+      }
+      
+      // Apply mood filtering with keywords
+      if (mood && mood !== 'any') {
+        const moodKeywords = MOOD_MAPPINGS[mood]?.keywords || [];
+        if (moodKeywords.length > 0) {
+          moodKeywords.forEach((keywordId: number) => {
+            params.append('with_keywords', keywordId.toString());
+          });
+        }
+      }
+    } else {
+      // Use OR logic (original implementation)
+      
+      // Add genre filtering if provided
+      if (genres && genres.length > 0) {
+        // For OR logic, we can use comma-separated genre IDs
+        params.append('with_genres', genres.join(','));
+      }
+      
+      // Add decade filtering if provided
+      if (decades && decades.length > 0) {
+        // Convert decades to release years (e.g., "1990s" -> 1990-1999)
+        const yearRanges = decades.map((decade: string) => {
+          const startYear = parseInt(decade.replace('s', ''));
+          return { 
+            start: startYear, 
+            end: startYear + 9 
+          };
+        });
+        
+        // Consider multiple decades by expanding the date range
+        if (yearRanges.length > 0) {
+          // Find minimum start year and maximum end year
+          const minStartYear = Math.min(...yearRanges.map((range: {start: number, end: number}) => range.start));
+          const maxEndYear = Math.max(...yearRanges.map((range: {start: number, end: number}) => range.end));
+          
+          // Add primary release date filters - use exact date format required by TMDB
+          params.append('primary_release_date.gte', `${minStartYear}-01-01`);
+          params.append('primary_release_date.lte', `${maxEndYear}-12-31`);
+          
+          // Make decade filtering stricter by increasing the minimum vote count
+          // This helps prioritize more well-known films from the selected decades
+          if (yearRanges.length === 1) {
+            // For a single decade, increase vote count requirement to ensure more accurate results
+            const currentVoteCount = parseInt(params.get('vote_count.gte') || '50');
+            params.set('vote_count.gte', Math.max(currentVoteCount, 100).toString());
+            
+            // Add a boost to sort by release date within that decade for better relevance
+            if (!params.has('sort_by') || params.get('sort_by') === 'popularity.desc') {
+              params.set('sort_by', 'vote_average.desc');
+            }
+          } else if (yearRanges.length > 1) {
+            // For multiple decades, we can be a bit more lenient to get enough results
+            const currentVoteCount = parseInt(params.get('vote_count.gte') || '50');
+            params.set('vote_count.gte', Math.max(currentVoteCount - 20, 30).toString());
+          }
+        }
+      }
+      
+      // Apply mood filtering with keywords
+      if (mood && mood !== 'any') {
+        // Collect keyword IDs for the selected mood
+        let keywordIds: number[] = [];
+        
+        // Add direct mood keywords
+        const moodKeywords = MOOD_MAPPINGS[mood]?.keywords || [];
+        keywordIds = [...keywordIds, ...moodKeywords];
+        
+        // Add genre combination keywords if applicable
+        if (genres && genres.length > 0 && GENRE_KEYWORD_MAPPINGS) {
+          // Convert genre IDs to names for lookup
+          const genreNames = genres.map((id: number) => {
+            const genre = GENRE_KEYWORD_MAPPINGS[id.toString()];
+            return genre ? genre.join(' + ') : '';
+          }).filter(Boolean).sort().join(' + ');
+          
+          if (GENRE_KEYWORD_MAPPINGS[genreNames]) {
+            keywordIds = [...keywordIds, ...GENRE_KEYWORD_MAPPINGS[genreNames]];
+          }
+        }
+        
+        // Add keywords to query
+        if (keywordIds.length > 0) {
+          params.append('with_keywords', keywordIds.join('|')); // Use | for OR logic
+        }
+      }
+    }
+
     // Get the mapped mood parameters or use defaults
     const moodParams: MoodParameters = 
       (mood && MOOD_MAPPINGS[mood]) ? 
@@ -216,7 +349,7 @@ export async function POST(request: Request) {
     keywordIds = Array.from(new Set(keywordIds));
     
     // Build query parameters, merging from mood and watch context
-    const params = new URLSearchParams({
+    const paramsMerged = new URLSearchParams({
       api_key: process.env.TMDB_API_KEY || '',
       language: 'en-US',
       sort_by: moodParams.sort_by || 'popularity.desc',
@@ -226,7 +359,7 @@ export async function POST(request: Request) {
     
     // Add vote parameters from mood
     if (moodParams.vote_average_gte) {
-      params.append('vote_average.gte', moodParams.vote_average_gte.toString());
+      paramsMerged.append('vote_average.gte', moodParams.vote_average_gte.toString());
     }
     
     // Use higher vote count requirement between mood and watch context
@@ -234,28 +367,28 @@ export async function POST(request: Request) {
       moodParams.vote_count_gte || 50, 
       watchContext.vote_count_gte || 50
     );
-    params.append('vote_count.gte', voteCountGte.toString());
+    paramsMerged.append('vote_count.gte', voteCountGte.toString());
     
     // Add runtime parameters if available
     if (moodParams.runtime_gte || watchContext.runtime_gte) {
       const runtimeGte = moodParams.runtime_gte || watchContext.runtime_gte;
-      if (runtimeGte) params.append('with_runtime.gte', runtimeGte.toString());
+      if (runtimeGte) paramsMerged.append('with_runtime.gte', runtimeGte.toString());
     }
     
     if (moodParams.runtime_lte || watchContext.runtime_lte) {
       const runtimeLte = moodParams.runtime_lte || watchContext.runtime_lte;
-      if (runtimeLte) params.append('with_runtime.lte', runtimeLte.toString());
+      if (runtimeLte) paramsMerged.append('with_runtime.lte', runtimeLte.toString());
     }
     
     // Add certification if watching with family
     if (watchContext.certification_country && watchContext.certification) {
-      params.append('certification_country', watchContext.certification_country);
-      params.append('certification', watchContext.certification);
+      paramsMerged.append('certification_country', watchContext.certification_country);
+      paramsMerged.append('certification', watchContext.certification);
     }
     
     // Add keywords if available - use OR operator to match any of the keywords
     if (keywordIds.length > 0) {
-      params.append('with_keywords', keywordIds.slice(0, 8).join('|')); // Use OR operator for keywords
+      paramsMerged.append('with_keywords', keywordIds.slice(0, 8).join('|')); // Use OR operator for keywords
     }
     
     // Add decade filtering if provided
@@ -275,21 +408,31 @@ export async function POST(request: Request) {
         const minStartYear = Math.min(...yearRanges.map((range: {start: number, end: number}) => range.start));
         const maxEndYear = Math.max(...yearRanges.map((range: {start: number, end: number}) => range.end));
         
-        // Add primary release date filters
-        params.append('primary_release_date.gte', `${minStartYear}-01-01`);
-        params.append('primary_release_date.lte', `${maxEndYear}-12-31`);
+        // Add primary release date filters - use exact date format required by TMDB
+        paramsMerged.append('primary_release_date.gte', `${minStartYear}-01-01`);
+        paramsMerged.append('primary_release_date.lte', `${maxEndYear}-12-31`);
         
-        // Prioritize the selected decades by adjusting vote count if multiple decades selected
-        if (yearRanges.length > 1) {
-          const currentVoteCount = parseInt(params.get('vote_count.gte') || '50');
-          // Lower vote count for broader date range to get more diverse results
-          params.set('vote_count.gte', Math.max(currentVoteCount - 20, 20).toString());
+        // Make decade filtering stricter by increasing the minimum vote count
+        // This helps prioritize more well-known films from the selected decades
+        if (yearRanges.length === 1) {
+          // For a single decade, increase vote count requirement to ensure more accurate results
+          const currentVoteCount = parseInt(paramsMerged.get('vote_count.gte') || '50');
+          paramsMerged.set('vote_count.gte', Math.max(currentVoteCount, 100).toString());
+          
+          // Add a boost to sort by release date within that decade for better relevance
+          if (!paramsMerged.has('sort_by') || paramsMerged.get('sort_by') === 'popularity.desc') {
+            paramsMerged.set('sort_by', 'vote_average.desc');
+          }
+        } else if (yearRanges.length > 1) {
+          // For multiple decades, we can be a bit more lenient to get enough results
+          const currentVoteCount = parseInt(paramsMerged.get('vote_count.gte') || '50');
+          paramsMerged.set('vote_count.gte', Math.max(currentVoteCount - 20, 30).toString());
         }
       }
     }
     
     // Make request to TMDB discover endpoint
-    const response = await fetch(`${TMDB_API_BASE_URL}/discover/movie?${params.toString()}`);
+    const response = await fetch(`${TMDB_API_BASE_URL}/discover/movie?${paramsMerged.toString()}`);
     const data = await response.json();
     
     if (!response.ok) {
@@ -298,31 +441,69 @@ export async function POST(request: Request) {
     
     // FALLBACK LOGIC: If we didn't get enough results, try a more general search
     if (data.results.length < 5) {
-      // Step 1: Try removing keywords but keep genres
+      // Step 1: Try removing keywords but keeping genres and decade filters
       const fallback1Params = new URLSearchParams({
         api_key: process.env.TMDB_API_KEY || '',
         language: 'en-US',
         sort_by: 'popularity.desc',
         include_adult: 'false',
         with_genres: finalGenres.join(','),
-        'vote_count.gte': '50' // Lower vote count threshold
+        'vote_count.gte': '30' // Lower vote count threshold for better chances with older films
       });
+      
+      // Preserve decade filtering in fallback
+      if (decades && decades.length > 0) {
+        const yearRanges = decades.map((decade: string) => {
+          const startYear = parseInt(decade.replace('s', ''));
+          return { 
+            start: startYear, 
+            end: startYear + 9 
+          };
+        });
+        
+        if (yearRanges.length > 0) {
+          const minStartYear = Math.min(...yearRanges.map((range: {start: number, end: number}) => range.start));
+          const maxEndYear = Math.max(...yearRanges.map((range: {start: number, end: number}) => range.end));
+          
+          fallback1Params.append('primary_release_date.gte', `${minStartYear}-01-01`);
+          fallback1Params.append('primary_release_date.lte', `${maxEndYear}-12-31`);
+        }
+      }
       
       const fallback1Response = await fetch(`${TMDB_API_BASE_URL}/discover/movie?${fallback1Params.toString()}`);
       const fallback1Data = await fallback1Response.json();
       
-      if (fallback1Response.ok && fallback1Data.results.length >= 5) {
+      if (fallback1Response.ok && fallback1Data.results.length >= 3) {
         data.results = fallback1Data.results;
       } else {
-        // Step 2: If still not enough, just use the most dominant genre
+        // Step 2: Try with just the genre and decade, no other filters
         const fallback2Params = new URLSearchParams({
           api_key: process.env.TMDB_API_KEY || '',
           language: 'en-US',
-          sort_by: 'popularity.desc',
+          sort_by: 'vote_average.desc', // Try by rating instead of popularity for old movies
           include_adult: 'false',
           with_genres: finalGenres.length > 0 ? finalGenres[0].toString() : '',
-          page: '1'
+          'vote_count.gte': '10' // Very low threshold for old films
         });
+        
+        // Still preserve decade filtering
+        if (decades && decades.length > 0) {
+          const yearRanges = decades.map((decade: string) => {
+            const startYear = parseInt(decade.replace('s', ''));
+            return { 
+              start: startYear, 
+              end: startYear + 9 
+            };
+          });
+          
+          if (yearRanges.length > 0) {
+            const minStartYear = Math.min(...yearRanges.map((range: {start: number, end: number}) => range.start));
+            const maxEndYear = Math.max(...yearRanges.map((range: {start: number, end: number}) => range.end));
+            
+            fallback2Params.append('primary_release_date.gte', `${minStartYear}-01-01`);
+            fallback2Params.append('primary_release_date.lte', `${maxEndYear}-12-31`);
+          }
+        }
         
         const fallback2Response = await fetch(`${TMDB_API_BASE_URL}/discover/movie?${fallback2Params.toString()}`);
         const fallback2Data = await fallback2Response.json();
@@ -334,7 +515,7 @@ export async function POST(request: Request) {
     }
     
     // Add calculated vibe match score and description to each movie
-    const moviesWithMatch = data.results.map((movie: any) => {
+    let moviesWithMatch = data.results.map((movie: any) => {
       // Real algorithm based on genre match and other factors
       // For now we'll calculate a score based on genre overlap
       const genreMatchCount = movie.genre_ids.filter((id: number) => finalGenres.includes(id)).length;
@@ -352,6 +533,43 @@ export async function POST(request: Request) {
           : null,
       };
     });
+    
+    // Additional post-processing to enforce decade filtering (double-check release dates)
+    if (decades && decades.length > 0) {
+      // Convert decades to year ranges
+      const yearRanges = decades.map((decade: string) => {
+        const startYear = parseInt(decade.replace('s', ''));
+        return { start: startYear, end: startYear + 9 };
+      });
+      
+      // Filter movies to only include those with release dates in the selected decades
+      moviesWithMatch = moviesWithMatch.filter((movie: any) => {
+        if (!movie.release_date) return false;
+        
+        const releaseYear = parseInt(movie.release_date.substring(0, 4));
+        return yearRanges.some((range: {start: number, end: number}) => 
+          releaseYear >= range.start && releaseYear <= range.end
+        );
+      });
+      
+      // If we still have no results after filtering, add a special message
+      if (moviesWithMatch.length === 0) {
+        // Returning an empty array with a special flag for the UI to handle
+        return NextResponse.json({
+          movies: [],
+          total_results: 0,
+          total_pages: 0,
+          vibe_description: "Movies from this era are hard to find. Try a different decade or genre combination.",
+          no_decade_results: true,
+          applied_filters: {
+            mood,
+            genres: finalGenres,
+            decades,
+            watchingWith
+          }
+        });
+      }
+    }
     
     // Return results with additional metadata for UI adaptation
     return NextResponse.json({ 

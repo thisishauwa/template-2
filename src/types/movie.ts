@@ -17,6 +17,7 @@ export interface MovieFilters {
   genres?: number[];
   decades?: string[];
   watchingWith?: string;
+  useAndLogic?: boolean;
 }
 
 export interface WatchlistMovie extends Movie {

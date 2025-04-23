@@ -26,10 +26,10 @@ body {
   min-height: 100vh;
 }
 
-/* Custom scrollbar */
+/* Custom scrollbar - removing purple indicators */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 4px;
+  height: 4px;
 }
 
 ::-webkit-scrollbar-track {
@@ -38,12 +38,12 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(128, 90, 213, 0.6);
+  background: rgba(75, 75, 75, 0.4);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(128, 90, 213, 0.8);
+  background: rgba(100, 100, 100, 0.6);
 }
 
 /* Typography */
@@ -76,4 +76,14 @@ h1, h2, h3, h4 {
   .text-balance {
     text-wrap: balance;
   }
+}
+
+/* Hide scrollbars completely */
+.hide-scrollbar {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
 }

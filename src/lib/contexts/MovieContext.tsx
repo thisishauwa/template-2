@@ -15,6 +15,9 @@ interface MovieContextType {
 
 const MovieContext = createContext<MovieContextType | undefined>(undefined);
 
+// Use a consistent key for localStorage
+const WATCHLIST_STORAGE_KEY = 'feelingFlicks_watchlist';
+
 export const MovieProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [movies, setMovies] = useState<Movie[]>([]);
   const [watchlist, setWatchlist] = useState<WatchlistMovie[]>([]);
@@ -25,7 +28,7 @@ export const MovieProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // Load watchlist from localStorage on initial render
   useEffect(() => {
     try {
-      const savedWatchlist = localStorage.getItem('feelingFlicksWatchlist');
+      const savedWatchlist = localStorage.getItem(WATCHLIST_STORAGE_KEY);
       if (savedWatchlist) {
         setWatchlist(JSON.parse(savedWatchlist));
       }
@@ -37,7 +40,7 @@ export const MovieProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // Save watchlist to localStorage whenever it changes
   useEffect(() => {
     try {
-      localStorage.setItem('feelingFlicksWatchlist', JSON.stringify(watchlist));
+      localStorage.setItem(WATCHLIST_STORAGE_KEY, JSON.stringify(watchlist));
     } catch (error) {
       console.error('Error saving watchlist to localStorage:', error);
     }
@@ -84,12 +87,34 @@ export const MovieProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (prev.some(m => m.id === movie.id)) {
         return prev;
       }
-      return [...prev, watchlistMovie];
+      
+      // Add new movie to watchlist
+      const newWatchlist = [...prev, watchlistMovie];
+      
+      // Save directly to localStorage for extra reliability
+      try {
+        localStorage.setItem(WATCHLIST_STORAGE_KEY, JSON.stringify(newWatchlist));
+      } catch (error) {
+        console.error('Error directly saving to localStorage:', error);
+      }
+      
+      return newWatchlist;
     });
   };
 
   const removeFromWatchlist = (movieId: number) => {
-    setWatchlist(prev => prev.filter(movie => movie.id !== movieId));
+    setWatchlist(prev => {
+      const newWatchlist = prev.filter(movie => movie.id !== movieId);
+      
+      // Save directly to localStorage for extra reliability
+      try {
+        localStorage.setItem(WATCHLIST_STORAGE_KEY, JSON.stringify(newWatchlist));
+      } catch (error) {
+        console.error('Error directly saving to localStorage:', error);
+      }
+      
+      return newWatchlist;
+    });
   };
 
   const clearMovies = () => {

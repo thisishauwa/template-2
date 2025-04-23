@@ -9,9 +9,9 @@ import MovieDetailModal from '@/components/MovieDetailModal';
 import Watchlist from '@/components/Watchlist';
 import HomeScreen from '@/components/HomeScreen';
 import { Movie, MovieFilters, WatchlistMovie } from '@/types/movie';
-import { Film, BookmarkIcon, Home as HomeIcon } from 'lucide-react';
+import { Film } from 'lucide-react';
 import Navbar from '@/components/Navbar';
-import HomeSection from '@/components/HomeSection';
+import BottomNav from '@/components/BottomNav';
 import { useRouter } from 'next/navigation';
 
 // Main app component
@@ -25,7 +25,7 @@ const FeelingFlicksApp: React.FC = () => {
     fetchMovies,
     addToWatchlist,
     removeFromWatchlist,
-    clearMovies 
+    clearMovies
   } = useMovies();
   
   // View states
@@ -33,6 +33,59 @@ const FeelingFlicksApp: React.FC = () => {
   const [showOnboarding, setShowOnboarding] = useState<boolean>(false);
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
   const [showWatchlist, setShowWatchlist] = useState<boolean>(false);
+  const [hasNewItems, setHasNewItems] = useState<boolean>(false);
+  const [lastWatchlistCount, setLastWatchlistCount] = useState<number>(0);
+  
+  // Determine active screen for bottom nav
+  const getActiveScreen = () => {
+    if (showWatchlist) return 'watchlist';
+    if (showHome) return 'home';
+    return 'discovery';
+  };
+  
+  // Load recommended movies based on watchlist
+  useEffect(() => {
+    if (watchlist.length > 0 && showHome) {
+      // Extract genres and decades from watchlist movies
+      const genres = watchlist.flatMap(movie => movie.genre_ids || []);
+      const uniqueGenres = Array.from(new Set(genres)).slice(0, 3); // Use top 3 genres max
+      
+      // Extract years from release dates
+      const years = watchlist
+        .map(movie => movie.release_date ? parseInt(movie.release_date.substring(0, 4)) : null)
+        .filter(Boolean) as number[];
+      
+      // Convert years to decades
+      const decades = years.map(year => {
+        const decade = Math.floor(year / 10) * 10;
+        return `${decade}s`;
+      });
+      const uniqueDecades = Array.from(new Set(decades));
+      
+      // Fetch recommendations based on watchlist - using AND logic for filters
+      if (uniqueGenres.length > 0 || uniqueDecades.length > 0) {
+        if (typeof fetchMovies === 'function') {
+          fetchMovies({
+            mood: 'any', // Default mood
+            genres: uniqueGenres,
+            decades: uniqueDecades,
+            useAndLogic: true // Important: Use AND logic for filtering
+          });
+        }
+      }
+    }
+  }, [watchlist.length, showHome, fetchMovies]);
+  
+  // Monitor watchlist for changes
+  useEffect(() => {
+    // If watchlist count has increased since last check, set notification flag
+    if (watchlist.length > lastWatchlistCount) {
+      setHasNewItems(true);
+    }
+    
+    // Update the last known count
+    setLastWatchlistCount(watchlist.length);
+  }, [watchlist.length, lastWatchlistCount]);
   
   // Handle starting the mood selection flow
   const handleStartMoodSelection = () => {
@@ -95,6 +148,14 @@ const FeelingFlicksApp: React.FC = () => {
   // Toggle watchlist visibility
   const toggleWatchlist = () => {
     setShowWatchlist(!showWatchlist);
+    
+    // Clear new items notification when opening the watchlist
+    if (!showWatchlist) {
+      setHasNewItems(false);
+    }
+    
+    // Don't reset other states when toggling watchlist
+    // This ensures we preserve location in the swipe stack
   };
   
   // Show error if fetching movies fails
@@ -117,56 +178,65 @@ const FeelingFlicksApp: React.FC = () => {
   
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-gray-900 to-black text-white">
-      <Navbar onWatchlistOpen={toggleWatchlist} />
-      
-      {/* Home Screen */}
-      {showHome && (
-        <HomeScreen 
-          onStartSwipe={handleStartMoodSelection}
-          watchlist={watchlist as WatchlistMovie[]} 
-          onMovieSelect={setSelectedMovie}
+      {/* Only show Navbar on home and watchlist screens, not on discovery screen */}
+      {(showHome || showWatchlist) && (
+        <Navbar 
+          onWatchlistOpen={toggleWatchlist}
+          onHomeClick={handleReturnToHome}
+          hasNewItems={hasNewItems}
         />
       )}
       
-      {/* Onboarding */}
-      <AnimatePresence>
-        {showOnboarding && (
-          <Onboarding 
-            onComplete={handleOnboardingComplete} 
-            onCancel={handleReturnToHome}
+      {/* Content container with padding for fixed navbar and bottom nav on mobile */}
+      <div className={`${(showHome || showWatchlist) ? 'pt-16' : 'pt-4'} pb-16 md:pb-0 flex-1 flex flex-col`}>
+        {/* Home Screen */}
+        {showHome && (
+          <HomeScreen 
+            onStartSwipe={handleStartMoodSelection}
+            watchlist={watchlist as WatchlistMovie[]} 
+            onMovieSelect={setSelectedMovie}
           />
         )}
-      </AnimatePresence>
-      
-      {/* Movie Discovery Screen */}
-      {!showOnboarding && !showHome && !showWatchlist && (
-        <>
-          {/* Header */}
-          <header className="p-4 flex items-center justify-between">
-            <button
-              className="p-2 rounded-full bg-gray-800/70 hover:bg-gray-700/70 transition-colors"
-              onClick={handleReturnToHome}
-            >
-              <HomeIcon size={20} />
-            </button>
-            <h1 className="text-xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-              Feeling Flicks
-            </h1>
-            <button
-              className="p-2 rounded-full bg-gray-800/70 hover:bg-gray-700/70 transition-colors relative"
-              onClick={toggleWatchlist}
-            >
-              <BookmarkIcon size={20} />
-              {watchlist.length > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-purple-600 text-xs flex items-center justify-center">
-                  {watchlist.length}
-                </span>
-              )}
-            </button>
-          </header>
-          
-          {/* Movie cards */}
+        
+        {/* Movie Discovery Screen */}
+        {!showOnboarding && !showHome && !showWatchlist && (
           <main className="flex-1 relative flex flex-col items-center justify-center p-4">
+            {/* Discovery Screen Controls */}
+            <div className="absolute top-4 right-4 z-10 flex space-x-3">
+              <button
+                onClick={handleReturnToHome}
+                className="p-3 rounded-full bg-gray-800/70 hover:bg-gray-700 transition-colors"
+                aria-label="Return to home"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                  <polyline points="9 22 9 12 15 12 15 22" />
+                </svg>
+              </button>
+              <button
+                onClick={toggleWatchlist}
+                className="p-3 rounded-full bg-gray-800/70 hover:bg-gray-700 transition-colors relative"
+                aria-label="View watchlist"
+              >
+                {hasNewItems && (
+                  <span className="absolute top-0 right-0 w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
+                )}
+                <Film size={20} />
+              </button>
+              <button
+                onClick={handleStartMoodSelection}
+                className="p-3 rounded-full bg-gray-800/70 hover:bg-gray-700 transition-colors"
+                aria-label="Reset preferences"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                  <path d="M3 3v5h5" />
+                  <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" />
+                  <path d="M16 21h5v-5" />
+                </svg>
+              </button>
+            </div>
+            
             <MovieCardStack
               movies={movies}
               loading={loading}
@@ -175,9 +245,18 @@ const FeelingFlicksApp: React.FC = () => {
               onCardTap={setSelectedMovie}
               onStackEmpty={handleStackEmpty}
               onRefresh={handleRefresh}
+              noDecadeResults={error === null && movies.length === 0 && currentFilters?.decades && currentFilters.decades.length > 0}
             />
           </main>
-        </>
+        )}
+      </div>
+      
+      {/* Onboarding - rendered on top with fixed positioning */}
+      {showOnboarding && (
+        <Onboarding 
+          onComplete={handleOnboardingComplete} 
+          onCancel={handleReturnToHome}
+        />
       )}
       
       {/* Watchlist view */}
@@ -207,6 +286,16 @@ const FeelingFlicksApp: React.FC = () => {
           />
         )}
       </AnimatePresence>
+      
+      {/* Bottom Navigation - only visible on mobile, home and watchlist screens (not during discovery or onboarding) */}
+      {!showOnboarding && (showHome || showWatchlist) && (
+        <BottomNav
+          onHomeClick={handleReturnToHome}
+          onWatchlistClick={toggleWatchlist}
+          hasNewItems={hasNewItems}
+          activeScreen={getActiveScreen()}
+        />
+      )}
     </div>
   );
 };

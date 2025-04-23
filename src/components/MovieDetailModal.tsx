@@ -38,8 +38,9 @@ const MovieDetailModal: React.FC<MovieDetailModalProps> = ({
     ? `https://image.tmdb.org/t/p/w1280${movie.backdrop_path}`
     : null;
     
-  // Format mood match as a number
-  const moodMatchScore = Math.floor(Math.random() * 5) + 6; // Random score between 6-10
+  // Use the movie's mood_match if available, otherwise generate a random one
+  // This will be used only when the movie comes from the discovery flow
+  const moodMatchScore = movie.mood_match || Math.floor(Math.random() * 5) + 6;
     
   // Handle share
   const handleShare = async () => {
@@ -154,16 +155,18 @@ const MovieDetailModal: React.FC<MovieDetailModalProps> = ({
                 <p className="text-gray-300 leading-relaxed">{movie.overview}</p>
               </div>
               
-              {/* Mood match */}
-              <div className="p-3 mb-6 bg-purple-900/20 rounded-lg border-l-2 border-purple-500 flex justify-between items-center">
-                <p className="text-purple-200">
-                  <span className="font-medium">Mood Match</span>
-                </p>
-                <div className="flex items-center gap-1">
-                  <span className="text-yellow-400 font-bold">{moodMatchScore}</span>
-                  <span className="text-purple-200">/10</span>
+              {/* Mood match - Only show if the movie has a mood_match property */}
+              {movie.mood_match && (
+                <div className="p-3 mb-6 bg-purple-900/20 rounded-lg border-l-2 border-purple-500 flex justify-between items-center">
+                  <p className="text-purple-200">
+                    <span className="font-medium">Mood Match</span>
+                  </p>
+                  <div className="flex items-center gap-1">
+                    <span className="text-yellow-400 font-bold">{moodMatchScore}</span>
+                    <span className="text-purple-200">/10</span>
+                  </div>
                 </div>
-              </div>
+              )}
               
               {/* Action buttons */}
               <div className="flex gap-3">

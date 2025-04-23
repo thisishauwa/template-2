@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { ChevronRight, Flame, TrendingUp, Star, ListFilter } from 'lucide-react';
+import { ChevronRight, Flame, TrendingUp, Star, ListFilter, Bookmark } from 'lucide-react';
 import { Movie } from '@/types/movie';
 
 interface HomeScreenProps {
@@ -148,7 +148,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
   }
   
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white overflow-x-hidden">
+    <div className="min-h-screen p-4 pt-12">
       <div className="max-w-5xl mx-auto p-4 md:p-6">
         {/* Hero section */}
         <div className="mb-12 text-center">
@@ -158,19 +158,23 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
           <p className="text-gray-300 mb-8 max-w-lg mx-auto">
             Discover movies based on your mood and taste. Find the perfect film for any occasion.
           </p>
-          <button
-            className="px-8 py-4 bg-purple-600 hover:bg-purple-700 transition-colors rounded-xl font-medium flex items-center gap-2 mx-auto"
-            onClick={onStartSwipe}
-          >
-            <ListFilter size={20} />
-            <span>Find Movies by Mood</span>
-          </button>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <button
+              className="w-full sm:w-auto px-8 py-4 bg-purple-600 hover:bg-purple-700 transition-colors rounded-xl font-medium flex items-center gap-2 justify-center"
+              onClick={onStartSwipe}
+            >
+              <ListFilter size={20} />
+              <span>Find Movies by Mood</span>
+            </button>
+            
+            
+          </div>
         </div>
         
         {/* Trending movies */}
         <section className="mb-12">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-bold flex items-center">
+            <h2 className="text-xl font-bold flex items-center">
               <Flame className="text-yellow-500 mr-2" size={24} />
               Trending This Week
             </h2>
@@ -213,9 +217,9 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
         {/* Popular movies */}
         <section className="mb-12">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-bold flex items-center">
+            <h2 className="text-xl font-bold flex items-center">
               <TrendingUp className="text-purple-500 mr-2" size={24} />
-              Popular Right Now
+              Popular Today
             </h2>
             <button className="text-purple-400 flex items-center hover:text-purple-300 transition-colors">
               <span className="mr-1">See all</span>
