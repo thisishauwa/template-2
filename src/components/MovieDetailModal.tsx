@@ -133,6 +133,8 @@ const MovieDetailModal: React.FC<MovieDetailModalProps> = ({
               fill
               sizes="(max-width: 768px) 100vw, 768px"
               className="object-cover rounded-t-3xl"
+              unoptimized={false}
+              priority
             />
             <div className="absolute inset-0 bg-gradient-to-b from-transparent to-gray-900" />
           </div>
@@ -144,11 +146,12 @@ const MovieDetailModal: React.FC<MovieDetailModalProps> = ({
             {/* Poster */}
             <div className="relative w-32 h-48 md:w-40 md:h-60 flex-shrink-0 -mt-20 mx-auto md:mx-0 z-10">
               <Image 
-                src={movie.poster_path || '/placeholder-poster.jpg'}
+                src={movie.poster_path ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` : '/placeholder-poster.jpg'}
                 alt={movie.title}
                 fill
                 sizes="(max-width: 768px) 128px, 160px"
                 className="object-cover rounded-lg shadow-xl"
+                unoptimized={false}
               />
             </div>
             

@@ -131,11 +131,13 @@ const MovieCard: React.FC<MovieCardProps> = ({
       {/* Movie poster */}
       <div className="relative h-[500px] w-full">
         <Image 
-          src={movie.poster_path || '/placeholder-poster.jpg'} 
+          src={movie.poster_path ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` : '/placeholder-poster.jpg'} 
           alt={movie.title}
           fill
           sizes="(max-width: 768px) 100vw, 500px"
           className="object-cover"
+          unoptimized={false}
+          priority
         />
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black opacity-90" />
       </div>

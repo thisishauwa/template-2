@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { MovieProvider, useMovies } from '@/lib/contexts/MovieContext';
 import Onboarding from '@/components/Onboarding';
@@ -41,6 +41,9 @@ const FeelingFlicksApp: React.FC = () => {
   const [fromMoodJournal, setFromMoodJournal] = useState<boolean>(false);
   const [watchlistFromDiscovery, setWatchlistFromDiscovery] = useState<boolean>(false);
   
+  // Add ref to track last filters used to prevent duplicate fetches
+  const lastFetchParams = useRef<string>('');
+  
   // Determine active screen for bottom nav
   const getActiveScreen = () => {
     if (showWatchlist) return 'watchlist';
@@ -74,16 +77,27 @@ const FeelingFlicksApp: React.FC = () => {
     
     // Only fetch recommendations if we have genres or decades to filter by
     if (uniqueGenres.length > 0 || uniqueDecades.length > 0) {
-      console.log('Fetching watchlist-based recommendations');
-      fetchMovies({
-        mood: 'any', // Default mood
+      // Create a string representation of the filter parameters
+      const fetchParamsString = JSON.stringify({
+        mood: 'any',
         genres: uniqueGenres,
-        decades: uniqueDecades,
-        useAndLogic: true // Important: Use AND logic for filtering
+        decades: uniqueDecades
       });
+      
+      // Only fetch if parameters have changed
+      if (fetchParamsString !== lastFetchParams.current) {
+        console.log('Fetching watchlist-based recommendations with new params');
+        lastFetchParams.current = fetchParamsString;
+        
+        fetchMovies({
+          mood: 'any', // Default mood
+          genres: uniqueGenres,
+          decades: uniqueDecades,
+          useAndLogic: true // Important: Use AND logic for filtering
+        });
+      }
     }
-  // Remove fetchMovies from the dependency array to avoid repeated calls
-  }, [watchlist, showHome]);
+  }, [watchlist, showHome, fetchMovies]);
   
   // Monitor watchlist for changes
   useEffect(() => {
@@ -134,6 +148,13 @@ const FeelingFlicksApp: React.FC = () => {
   
   // Handle onboarding completion
   const handleOnboardingComplete = (filters: MovieFilters) => {
+    // Create a string representation of the filter parameters
+    const fetchParamsString = JSON.stringify(filters);
+    
+    // Always fetch after onboarding completion
+    console.log('Fetching movies based on onboarding filters');
+    lastFetchParams.current = fetchParamsString;
+    
     fetchMovies(filters);
     setShowOnboarding(false);
   };
@@ -164,6 +185,16 @@ const FeelingFlicksApp: React.FC = () => {
   // Handle refresh - fetch more movies with the same filters
   const handleRefresh = () => {
     if (currentFilters) {
+      // For refresh, we want to fetch even with the same parameters
+      // but we'll add a timestamp to make the request unique
+      const uniqueRefreshParams = JSON.stringify({
+        ...currentFilters,
+        timestamp: Date.now() // Add timestamp to force a refresh
+      });
+      
+      console.log('Refreshing movie recommendations');
+      lastFetchParams.current = uniqueRefreshParams;
+      
       fetchMovies(currentFilters);
     } else {
       setShowOnboarding(true);
@@ -226,11 +257,25 @@ const FeelingFlicksApp: React.FC = () => {
     // Close mood journal and start discovery with the selected mood
     setShowMoodJournal(false);
     setFromMoodJournal(true); // Track that we came from the mood journal
-    fetchMovies({
+    
+    // Create a string representation of the filter parameters
+    const fetchParamsString = JSON.stringify({
       mood,
       genres: [],
-      decades: [],
+      decades: []
     });
+    
+    // Only fetch if parameters have changed
+    if (fetchParamsString !== lastFetchParams.current) {
+      console.log('Fetching mood-based recommendations with new params');
+      lastFetchParams.current = fetchParamsString;
+      
+      fetchMovies({
+        mood,
+        genres: [],
+        decades: [],
+      });
+    }
   };
   
   // Handle returning to mood journal from discovery

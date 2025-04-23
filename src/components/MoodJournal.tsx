@@ -255,7 +255,7 @@ const MoodJournal: React.FC<MoodJournalProps> = ({ onViewMoodRecommendations }) 
               {/* Removed mood chips here */}
               
               <p className="text-sm text-gray-400">
-                Based on your journal, you've most frequently felt{' '}
+                Based on your journal, you&apos;ve most frequently felt{' '}
                 <button 
                   onClick={() => moodFrequency[0]?.mood && handleGetRecommendations(moodFrequency[0].mood)}
                   className="text-primary-light font-medium hover:underline focus:outline-none"
@@ -351,7 +351,7 @@ const MoodJournal: React.FC<MoodJournalProps> = ({ onViewMoodRecommendations }) 
           )}
           
           {entries.length === 0 ? (
-            <p className="text-gray-400">No entries yet. Start by recording today's mood!</p>
+            <p className="text-gray-400">No entries yet. Start by recording today&apos;s mood!</p>
           ) : currentEntries.length === 0 ? (
             <div className="p-8 text-center bg-gray-800/50 rounded-lg">
               <p className="text-gray-400">No entries match your current filters.</p>
@@ -571,7 +571,7 @@ const MoodJournal: React.FC<MoodJournalProps> = ({ onViewMoodRecommendations }) 
                     rows={3}
                     value={newEntry.note}
                     onChange={e => setNewEntry({ ...newEntry, note: e.target.value })}
-                    placeholder="What's on your mind today?"
+                    placeholder="What&apos;s on your mind today?"
                   />
                 </div>
                 
@@ -603,7 +603,7 @@ const MoodJournal: React.FC<MoodJournalProps> = ({ onViewMoodRecommendations }) 
       <button
         onClick={() => setIsModalOpen(true)}
         className="fixed bottom-20 sm:bottom-6 right-6 z-50 bg-primary hover:bg-primary-hover text-white rounded-full p-4 shadow-lg flex items-center justify-center transition-transform hover:scale-105"
-        aria-label="Record today's mood"
+        aria-label="Record today&apos;s mood"
       >
         <Edit3 size={24} />
       </button>
