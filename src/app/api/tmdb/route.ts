@@ -168,7 +168,76 @@ const WATCH_CONTEXT_MAPPINGS: Record<string, WatchContextParameters> = {
 // Function to get movies based on genre, year, and other filters
 export async function POST(request: Request) {
   try {
-    const { mood, genres, decades, watchingWith, useAndLogic = false } = await request.json();
+    // Check for a running request timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 25000); // 25 second timeout
+    
+    // Parse the request body
+    const body = await request.json();
+    
+    // Handle list-based requests (trending, popular, top_rated)
+    if (body.list) {
+      console.log(`Processing list request for: ${body.list}`);
+      
+      const params = new URLSearchParams();
+      params.append('api_key', process.env.TMDB_API_KEY || '');
+      params.append('language', 'en-US');
+      
+      let endpoint = '';
+      switch (body.list) {
+        case 'trending':
+          endpoint = '/trending/movie/week';
+          break;
+        case 'popular':
+          endpoint = '/movie/popular';
+          break;
+        case 'top_rated':
+          endpoint = '/movie/top_rated';
+          break;
+        default:
+          throw new Error('Invalid list type');
+      }
+      
+      const url = `${TMDB_API_BASE_URL}${endpoint}?${params.toString()}`;
+      console.log(`Fetching from TMDB: ${url}`);
+      
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        console.error(`TMDB API error: ${response.status}`);
+        throw new Error(`TMDB API error: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      // Process the response data
+      const movies = data.results.map((movie: any) => ({
+        id: movie.id,
+        title: movie.title,
+        overview: movie.overview,
+        release_date: movie.release_date,
+        popularity: movie.popularity,
+        vote_average: movie.vote_average,
+        vote_count: movie.vote_count,
+        poster_path: movie.poster_path 
+          ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` 
+          : null,
+        backdrop_path: movie.backdrop_path 
+          ? `https://image.tmdb.org/t/p/w1280${movie.backdrop_path}` 
+          : null,
+        genre_ids: movie.genre_ids || [],
+      }));
+      
+      clearTimeout(timeoutId);
+      
+      return NextResponse.json({
+        movies,
+        total_results: data.total_results || movies.length,
+      });
+    }
+    
+    // Regular filter-based requests
+    const { mood, genres, decades, watchingWith, useAndLogic = false } = body;
     console.log('Received filters:', { mood, genres, decades, watchingWith, useAndLogic });
     
     // Create URL parameters for TMDB API

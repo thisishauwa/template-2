@@ -28,39 +28,60 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
       setError(null);
       
       try {
-        // Fetch trending movies
-        const trendingResponse = await fetch('/api/tmdb?list=trending');
-        const trendingData = await trendingResponse.json();
+        // Use a timeout to prevent hanging requests
+        const fetchWithTimeout = async (options: { url: string, method: string, body?: any }, timeout: number = 10000) => {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), timeout);
+          
+          try {
+            const response = await fetch(options.url, { 
+              method: options.method,
+              headers: options.method === 'POST' ? { 'Content-Type': 'application/json' } : undefined,
+              body: options.body ? JSON.stringify(options.body) : undefined,
+              signal: controller.signal 
+            });
+            clearTimeout(timeoutId);
+            
+            if (!response.ok) {
+              throw new Error(`Failed to fetch: ${response.status}`);
+            }
+            
+            return await response.json();
+          } catch (error: any) {
+            if (error.name === 'AbortError') {
+              throw new Error('Request timed out');
+            }
+            throw error;
+          }
+        };
         
-        if (!trendingResponse.ok) {
-          throw new Error('Failed to fetch trending movies');
-        }
+        // Try to fetch all data in parallel using POST requests with list parameter
+        const [trendingData, popularData, topRatedData] = await Promise.all([
+          fetchWithTimeout({
+            url: '/api/tmdb',
+            method: 'POST',
+            body: { list: 'trending' }
+          }),
+          fetchWithTimeout({
+            url: '/api/tmdb',
+            method: 'POST',
+            body: { list: 'popular' }
+          }),
+          fetchWithTimeout({
+            url: '/api/tmdb',
+            method: 'POST',
+            body: { list: 'top_rated' }
+          })
+        ]);
         
-        setTrendingMovies(trendingData.movies);
+        // Set all the data at once
+        setTrendingMovies(trendingData.movies || []);
+        setPopularMovies(popularData.movies || []);
+        setTopRatedMovies(topRatedData.movies || []);
         
-        // Fetch popular movies
-        const popularResponse = await fetch('/api/tmdb?list=popular');
-        const popularData = await popularResponse.json();
-        
-        if (!popularResponse.ok) {
-          throw new Error('Failed to fetch popular movies');
-        }
-        
-        setPopularMovies(popularData.movies);
-        
-        // Fetch top-rated movies
-        const topRatedResponse = await fetch('/api/tmdb?list=top_rated');
-        const topRatedData = await topRatedResponse.json();
-        
-        if (!topRatedResponse.ok) {
-          throw new Error('Failed to fetch top-rated movies');
-        }
-        
-        setTopRatedMovies(topRatedData.movies);
-        
-      } catch (error) {
-        setError(error instanceof Error ? error.message : 'An unknown error occurred');
+      } catch (error: any) {
         console.error('Error fetching movies for homepage:', error);
+        setError(error instanceof Error ? error.message : 'Failed to load recommendations');
       } finally {
         setLoading(false);
       }
@@ -156,7 +177,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
             Feeling things?
           </h1>
           <p className="text-lg md:text-xl text-gray-300 mb-8 max-w-lg mx-auto">
-            Same. Let’s find the right film for right now.
+            Same. Let's find the right film for right now.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <button

@@ -39,10 +39,14 @@ export const MovieProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Save watchlist to localStorage whenever it changes
   useEffect(() => {
-    try {
-      localStorage.setItem(WATCHLIST_STORAGE_KEY, JSON.stringify(watchlist));
-    } catch (error) {
-      console.error('Error saving watchlist to localStorage:', error);
+    // Skip if watchlist is empty to avoid clearing localStorage during initialization
+    if (watchlist.length > 0) {
+      try {
+        localStorage.setItem(WATCHLIST_STORAGE_KEY, JSON.stringify(watchlist));
+        console.log(`Saved ${watchlist.length} movies to localStorage`);
+      } catch (error) {
+        console.error('Error saving watchlist to localStorage:', error);
+      }
     }
   }, [watchlist]);
 
@@ -119,6 +123,9 @@ export const MovieProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const clearMovies = () => {
     setMovies([]);
+    setCurrentFilters(null);
+    setError(null);
+    console.log('MovieContext: Cleared movies and filters');
   };
 
   return (

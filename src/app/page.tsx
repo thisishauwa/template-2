@@ -14,6 +14,7 @@ import { Film, ChevronLeft } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import BottomNav from '@/components/BottomNav';
 import { useRouter } from 'next/navigation';
+import { AuthProvider } from '@/lib/contexts/AuthContext';
 
 // Main app component
 const FeelingFlicksApp: React.FC = () => {
@@ -50,36 +51,39 @@ const FeelingFlicksApp: React.FC = () => {
   
   // Load recommended movies based on watchlist
   useEffect(() => {
-    if (watchlist.length > 0 && showHome) {
-      // Extract genres and decades from watchlist movies
-      const genres = watchlist.flatMap(movie => movie.genre_ids || []);
-      const uniqueGenres = Array.from(new Set(genres)).slice(0, 3); // Use top 3 genres max
-      
-      // Extract years from release dates
-      const years = watchlist
-        .map(movie => movie.release_date ? parseInt(movie.release_date.substring(0, 4)) : null)
-        .filter(Boolean) as number[];
-      
-      // Convert years to decades
-      const decades = years.map(year => {
-        const decade = Math.floor(year / 10) * 10;
-        return `${decade}s`;
-      });
-      const uniqueDecades = Array.from(new Set(decades));
-      
-      // Fetch recommendations based on watchlist - using AND logic for filters
-      if (uniqueGenres.length > 0 || uniqueDecades.length > 0) {
-        if (typeof fetchMovies === 'function') {
-          fetchMovies({
-            mood: 'any', // Default mood
-            genres: uniqueGenres,
-            decades: uniqueDecades,
-            useAndLogic: true // Important: Use AND logic for filtering
-          });
-        }
-      }
+    // Only run this effect when we have a watchlist and are on the home screen
+    if (watchlist.length === 0 || !showHome) {
+      return;
     }
-  }, [watchlist.length, showHome, fetchMovies]);
+    
+    // Extract genres and decades from watchlist movies
+    const genres = watchlist.flatMap(movie => movie.genre_ids || []);
+    const uniqueGenres = Array.from(new Set(genres)).slice(0, 3); // Use top 3 genres max
+    
+    // Extract years from release dates
+    const years = watchlist
+      .map(movie => movie.release_date ? parseInt(movie.release_date.substring(0, 4)) : null)
+      .filter(Boolean) as number[];
+    
+    // Convert years to decades
+    const decades = years.map(year => {
+      const decade = Math.floor(year / 10) * 10;
+      return `${decade}s`;
+    });
+    const uniqueDecades = Array.from(new Set(decades));
+    
+    // Only fetch recommendations if we have genres or decades to filter by
+    if (uniqueGenres.length > 0 || uniqueDecades.length > 0) {
+      console.log('Fetching watchlist-based recommendations');
+      fetchMovies({
+        mood: 'any', // Default mood
+        genres: uniqueGenres,
+        decades: uniqueDecades,
+        useAndLogic: true // Important: Use AND logic for filtering
+      });
+    }
+  // Remove fetchMovies from the dependency array to avoid repeated calls
+  }, [watchlist, showHome]);
   
   // Monitor watchlist for changes
   useEffect(() => {
@@ -94,17 +98,38 @@ const FeelingFlicksApp: React.FC = () => {
   
   // Handle starting the mood selection flow
   const handleStartMoodSelection = () => {
+    // Clear any previous movies and filters first
+    clearMovies();
+    
+    // Reset navigation state
+    setFromMoodJournal(false);
+    
+    // Show onboarding and hide home screen
     setShowHome(false);
     setShowOnboarding(true);
+    
+    console.log('Starting mood selection: Previous filters cleared');
   };
   
   // Handle returning to home screen
   const handleReturnToHome = () => {
+    // Clear filters and movie data to prevent stale API requests
+    clearMovies();
+    
+    // Reset all view states
     setShowOnboarding(false);
     setShowWatchlist(false);
     setWatchlistFromDiscovery(false);
     setShowMoodJournal(false);
     setShowHome(true);
+    
+    // Reset navigation state
+    setFromMoodJournal(false);
+    
+    // Clear any selected movie
+    setSelectedMovie(null);
+    
+    console.log('Home navigation: All states reset, filters cleared');
   };
   
   // Handle onboarding completion
@@ -397,7 +422,9 @@ const FeelingFlicksApp: React.FC = () => {
 export default function Home() {
   return (
     <MovieProvider>
-      <FeelingFlicksApp />
+      <AuthProvider>
+        <FeelingFlicksApp />
+      </AuthProvider>
     </MovieProvider>
   );
 }

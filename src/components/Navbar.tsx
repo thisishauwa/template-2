@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { Bookmark, User, BookOpen, Home } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
+import { useAuth } from '@/lib/hooks/useAuth';
+import Profile from './Profile';
 
 interface NavbarProps {
   onWatchlistOpen?: () => void;
@@ -20,6 +22,8 @@ const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const pathname = usePathname();
   const router = useRouter();
+  const { user } = useAuth();
+  const [showProfile, setShowProfile] = useState(false);
   
   const handleLogoClick = (e: React.MouseEvent) => {
     if (onHomeClick) {
@@ -29,80 +33,101 @@ const Navbar: React.FC<NavbarProps> = ({
     // If no onHomeClick provided, let the Link navigate normally
   };
   
+  const toggleProfile = () => {
+    setShowProfile(!showProfile);
+  };
+  
   return (
-    <header className="fixed top-0 inset-x-0 z-50 backdrop-blur-md bg-black/80 border-b border-white/10 font-britti-sans">
-      <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-        {/* Logo */}
-        <Link 
-          href="/" 
-          className="text-white text-2xl font-bold"
-          onClick={handleLogoClick}
-        >
-          FeelingFlicks
-        </Link>
-        
-        {/* Menu buttons for desktop */}
-        <div className="hidden md:flex items-center space-x-6">
-          {/* Home button */}
-          <button 
-            onClick={onHomeClick}
-            className={`flex items-center transition-colors ${
-              activeScreen === 'home' 
-                ? 'text-white font-medium' 
-                : 'text-gray-400 hover:text-white'
-            }`}
-            aria-label="Go to home"
+    <>
+      <header className="fixed top-0 inset-x-0 z-50 backdrop-blur-md bg-black/80 border-b border-white/10 font-britti-sans">
+        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+          {/* Logo */}
+          <Link 
+            href="/" 
+            className="text-white text-2xl font-bold"
+            onClick={handleLogoClick}
           >
-            <Home className="w-5 h-5 mr-1.5" />
-            <span>Home</span>
-          </button>
+            FeelingFlicks
+          </Link>
           
-          {/* Mood Journal Button */}
-          {onMoodJournalOpen && (
+          {/* Menu buttons for desktop */}
+          <div className="hidden md:flex items-center space-x-6">
+            {/* Home button */}
             <button 
-              onClick={onMoodJournalOpen}
+              onClick={onHomeClick}
               className={`flex items-center transition-colors ${
-                activeScreen === 'journal' 
+                activeScreen === 'home' 
                   ? 'text-white font-medium' 
                   : 'text-gray-400 hover:text-white'
               }`}
-              aria-label="Open mood journal"
+              aria-label="Go to home"
             >
-              <BookOpen className="w-5 h-5 mr-1.5" />
-              <span>Mood Journal</span>
+              <Home className="w-5 h-5 mr-1.5" />
+              <span>Home</span>
             </button>
-          )}
-          
-          {/* Watchlist Button */}
-          {onWatchlistOpen && (
+            
+            {/* Mood Journal Button */}
+            {onMoodJournalOpen && (
+              <button 
+                onClick={onMoodJournalOpen}
+                className={`flex items-center transition-colors ${
+                  activeScreen === 'journal' 
+                    ? 'text-white font-medium' 
+                    : 'text-gray-400 hover:text-white'
+                }`}
+                aria-label="Open mood journal"
+              >
+                <BookOpen className="w-5 h-5 mr-1.5" />
+                <span>Mood Journal</span>
+              </button>
+            )}
+            
+            {/* Watchlist Button */}
+            {onWatchlistOpen && (
+              <button 
+                onClick={onWatchlistOpen}
+                className={`flex items-center transition-colors relative ${
+                  activeScreen === 'watchlist' 
+                    ? 'text-white font-medium' 
+                    : 'text-gray-400 hover:text-white'
+                }`}
+                aria-label="Open watchlist"
+              >
+                <Bookmark className="w-5 h-5 mr-1.5" />
+                <span>Watchlist</span>
+                
+                {/* Notification dot */}
+                {hasNewItems && (
+                  <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
+                )}
+              </button>
+            )}
+            
+            {/* Profile */}
             <button 
-              onClick={onWatchlistOpen}
-              className={`flex items-center transition-colors relative ${
-                activeScreen === 'watchlist' 
-                  ? 'text-white font-medium' 
-                  : 'text-gray-400 hover:text-white'
-              }`}
-              aria-label="Open watchlist"
+              onClick={toggleProfile}
+              className="flex items-center transition-colors text-gray-400 hover:text-white"
+              aria-label="Open profile"
             >
-              <Bookmark className="w-5 h-5 mr-1.5" />
-              <span>Watchlist</span>
-              
-              {/* Notification dot */}
-              {hasNewItems && (
-                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
+              {user && user.photoURL ? (
+                <img 
+                  src={user.photoURL} 
+                  alt={user.displayName || "User"} 
+                  className="w-8 h-8 rounded-full"
+                />
+              ) : (
+                <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-600 to-pink-500 flex items-center justify-center text-white text-sm font-medium">
+                  <User size={18} />
+                </div>
               )}
             </button>
-          )}
-          
-          {/* Profile */}
-          <div className="flex items-center">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-r from-primary to-accent flex items-center justify-center text-white text-sm font-medium">
-              <User size={18} />
-            </div>
           </div>
         </div>
-      </div>
-    </header>
+      </header>
+      
+      {/* Profile Modal */}
+      {showProfile && <Profile onClose={toggleProfile} />}
+    </>
   );
 };
 
