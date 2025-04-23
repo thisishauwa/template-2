@@ -2,6 +2,9 @@ import './globals.css';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import localFont from 'next/font/local';
+import { AuthProvider } from '../lib/contexts/AuthContext';
+import { MoodJournalProvider } from '../lib/contexts/MoodJournalContext';
+import { MovieProvider } from '../lib/contexts/MovieContext';
 
 // Load Inter font from Google
 const inter = Inter({ 
@@ -50,7 +53,15 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${inter.variable} ${brittiSans.variable}`}>
-      <body className="font-britti-sans">{children}</body>
+      <body className="font-britti-sans">
+        <AuthProvider>
+          <MovieProvider>
+            <MoodJournalProvider>
+              {children}
+            </MoodJournalProvider>
+          </MovieProvider>
+        </AuthProvider>
+      </body>
     </html>
   );
 }

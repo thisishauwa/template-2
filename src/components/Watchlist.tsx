@@ -1,24 +1,12 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
 import { X, Share2, Filter, ChevronDown } from 'lucide-react';
 import { format } from 'date-fns';
-
-// Define the Movie type for the component
-interface Movie {
-  id: number;
-  title: string;
-  poster_path: string;
-  backdrop_path?: string;
-  overview: string;
-  release_date?: string;
-  vote_average: number;
-  genre_ids: number[];
-  mood?: string; // Added for filtering
-}
+import { useMovies } from '../lib/contexts/MovieContext';
 
 interface WatchlistProps {
   onClose: () => void;
-  initialMovies?: Movie[]; // For backward compatibility
+  initialMovies?: any[]; // For backward compatibility
   showHeader?: boolean; // Controls if the header with close button is shown
 }
 
@@ -27,64 +15,16 @@ const Watchlist: React.FC<WatchlistProps> = ({
   initialMovies = [],
   showHeader = true // Default to showing header for backward compatibility
 }) => {
-  // State for the watchlist
-  const [watchlistMovies, setWatchlistMovies] = useState<Movie[]>([]);
-  const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
+  const { watchlist, loading, removeFromWatchlist } = useMovies();
+  
+  // State for UI
+  const [selectedMovie, setSelectedMovie] = useState<any | null>(null);
   const [copiedId, setCopiedId] = useState<number | null>(null);
   const [showFilterMenu, setShowFilterMenu] = useState<boolean>(false);
   const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
   
-  // Load watchlist from localStorage on mount
-  useEffect(() => {
-    const loadWatchlist = () => {
-      try {
-        const savedWatchlist = localStorage.getItem('feelingFlicks_watchlist');
-        if (savedWatchlist) {
-          const parsedWatchlist = JSON.parse(savedWatchlist);
-          setWatchlistMovies(parsedWatchlist);
-        } else if (initialMovies.length > 0) {
-          // Use initialMovies if no localStorage data
-          setWatchlistMovies(initialMovies);
-          // Save to localStorage for future use
-          localStorage.setItem('feelingFlicks_watchlist', JSON.stringify(initialMovies));
-        }
-      } catch (error) {
-        console.error('Error loading watchlist:', error);
-      }
-    };
-    
-    loadWatchlist();
-  }, [initialMovies]);
-  
-  // Save watchlist to localStorage when it changes
-  useEffect(() => {
-    if (watchlistMovies.length > 0) {
-      localStorage.setItem('feelingFlicks_watchlist', JSON.stringify(watchlistMovies));
-    }
-  }, [watchlistMovies]);
-  
-  // Remove a movie from the watchlist
-  const removeFromWatchlist = (movieId: number) => {
-    setWatchlistMovies(prevMovies => prevMovies.filter(movie => movie.id !== movieId));
-    if (selectedMovie?.id === movieId) {
-      setSelectedMovie(null);
-    }
-    
-    // Also update localStorage
-    try {
-      const savedWatchlist = localStorage.getItem('feelingFlicks_watchlist');
-      if (savedWatchlist) {
-        const parsedWatchlist = JSON.parse(savedWatchlist);
-        const updatedWatchlist = parsedWatchlist.filter((movie: Movie) => movie.id !== movieId);
-        localStorage.setItem('feelingFlicks_watchlist', JSON.stringify(updatedWatchlist));
-      }
-    } catch (error) {
-      console.error('Error updating localStorage:', error);
-    }
-  };
-  
   // Share a movie
-  const shareMovie = (movie: Movie) => {
+  const shareMovie = (movie: any) => {
     const shareText = `Check out "${movie.title}"! ${movie.overview.substring(0, 100)}${movie.overview.length > 100 ? '...' : ''}`;
     
     navigator.clipboard.writeText(shareText)
@@ -108,7 +48,7 @@ const Watchlist: React.FC<WatchlistProps> = ({
   };
   
   // Get unique moods for filtering
-  const uniqueMoods = Array.from(new Set(watchlistMovies.map(movie => movie.mood).filter(Boolean)));
+  const uniqueMoods = Array.from(new Set(watchlist.map(movie => movie.mood).filter(Boolean)));
   
   // Toggle filter menu
   const toggleFilterMenu = () => {
@@ -123,8 +63,8 @@ const Watchlist: React.FC<WatchlistProps> = ({
   
   // Filter movies based on selected mood
   const filteredMovies = selectedFilter 
-    ? watchlistMovies.filter(movie => movie.mood === selectedFilter)
-    : watchlistMovies;
+    ? watchlist.filter(movie => movie.mood === selectedFilter)
+    : watchlist;
   
   // Handle close button click
   const handleClose = (e: React.MouseEvent) => {
@@ -137,6 +77,20 @@ const Watchlist: React.FC<WatchlistProps> = ({
   const containerClass = showHeader 
     ? "fixed inset-0 bg-black/90 backdrop-blur-md z-50 overflow-hidden flex flex-col" 
     : "flex-1 flex flex-col overflow-hidden";
+  
+  // Loading state
+  if (loading) {
+    return (
+      <div className={containerClass}>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500 mx-auto mb-4"></div>
+            <p className="text-gray-400">Loading your watchlist...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
   
   return (
     <div className={containerClass}>
@@ -202,12 +156,12 @@ const Watchlist: React.FC<WatchlistProps> = ({
       )}
       
       {/* Empty state */}
-      {(watchlistMovies.length === 0 || (selectedFilter && filteredMovies.length === 0)) && (
+      {(watchlist.length === 0 || (selectedFilter && filteredMovies.length === 0)) && (
         <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
           <div className="w-16 h-16 mb-4 rounded-full bg-gray-800 flex items-center justify-center">
             <span className="text-2xl">🍿</span>
           </div>
-          {watchlistMovies.length === 0 ? (
+          {watchlist.length === 0 ? (
             <>
               <h3 className="text-xl font-bold text-white mb-2">Your watchlist is empty</h3>
               <p className="text-gray-400 mb-6">Save movies while browsing to add them here</p>
@@ -292,7 +246,10 @@ const Watchlist: React.FC<WatchlistProps> = ({
                 <div className="flex flex-col gap-3">
                   <button
                     className="w-full py-3 px-4 bg-red-600/20 text-red-300 rounded-lg font-medium border border-red-600/30 hover:bg-red-600/30 transition-colors"
-                    onClick={() => removeFromWatchlist(selectedMovie.id)}
+                    onClick={() => {
+                      removeFromWatchlist(selectedMovie.id);
+                      setSelectedMovie(null);
+                    }}
                   >
                     Remove from Watchlist
                   </button>

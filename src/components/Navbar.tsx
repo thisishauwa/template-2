@@ -4,6 +4,7 @@ import { Bookmark, User, BookOpen, Home } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/hooks/useAuth';
 import Profile from './Profile';
+import Image from 'next/image';
 
 interface NavbarProps {
   onWatchlistOpen?: () => void;
@@ -44,10 +45,16 @@ const Navbar: React.FC<NavbarProps> = ({
           {/* Logo */}
           <Link 
             href="/" 
-            className="text-white text-2xl font-bold"
+            className="text-white flex items-center"
             onClick={handleLogoClick}
           >
-            FeelingFlicks
+            <Image 
+              src="/logoimgwhite.png" 
+              alt="UFP Logo" 
+              width={120} 
+              height={40} 
+              className="h-12 w-auto"
+            />
           </Link>
           
           {/* Menu buttons for desktop */}

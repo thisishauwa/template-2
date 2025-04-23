@@ -2,19 +2,21 @@ import React, { useState, useEffect, useRef } from 'react';
 import { format, parseISO, isAfter, isBefore, startOfMonth, endOfMonth, subDays } from 'date-fns';
 import { Calendar, Heart, Film, Edit3, Trash2, ChevronLeft, ChevronRight, Calendar as CalendarIcon, Filter, X } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { useAuth } from '../lib/hooks/useAuth';
+import { useMoodJournal, MoodEntry } from '../lib/contexts/MoodJournalContext';
 
 // Types for mood journal entries
-interface MoodEntry {
-  id: string;
-  date: string;
-  mood: string;
-  note: string;
-  films?: {
-    id: number;
-    title: string;
-    posterPath: string;
-  }[];
-}
+// interface MoodEntry {
+//   id: string;
+//   date: string;
+//   mood: string;
+//   note: string;
+//   films?: {
+//     id: number;
+//     title: string;
+//     posterPath: string;
+//   }[];
+// }
 
 interface MoodJournalProps {
   onViewMoodRecommendations: (mood: string) => void;
@@ -37,7 +39,8 @@ const MOOD_COLORS: Record<string, string> = {
 };
 
 const MoodJournal: React.FC<MoodJournalProps> = ({ onViewMoodRecommendations }) => {
-  const [entries, setEntries] = useState<MoodEntry[]>([]);
+  const { user } = useAuth();
+  const { entries, loading: entriesLoading, addEntry, deleteEntry } = useMoodJournal();
   const [newEntry, setNewEntry] = useState<{ mood: string; note: string }>({
     mood: '',
     note: '',
@@ -55,19 +58,6 @@ const MoodJournal: React.FC<MoodJournalProps> = ({ onViewMoodRecommendations }) 
   // Chart related state
   const [chartTimeframe, setChartTimeframe] = useState<'week' | 'month' | 'all'>('month');
   const chartRef = useRef<HTMLDivElement>(null);
-
-  // Load entries from localStorage on component mount
-  useEffect(() => {
-    const savedEntries = localStorage.getItem('moodJournalEntries');
-    if (savedEntries) {
-      setEntries(JSON.parse(savedEntries));
-    }
-  }, []);
-
-  // Save entries to localStorage when they change
-  useEffect(() => {
-    localStorage.setItem('moodJournalEntries', JSON.stringify(entries));
-  }, [entries]);
   
   // Reset pagination when filter changes
   useEffect(() => {
@@ -77,15 +67,13 @@ const MoodJournal: React.FC<MoodJournalProps> = ({ onViewMoodRecommendations }) 
   // Handle adding a new entry
   const handleAddEntry = () => {
     if (newEntry.mood) {
-      const entry: MoodEntry = {
-        id: Date.now().toString(),
+      addEntry({
         date: new Date().toISOString(),
         mood: newEntry.mood,
         note: newEntry.note,
         films: [],
-      };
+      });
       
-      setEntries([entry, ...entries]);
       setNewEntry({ mood: '', note: '' });
       setIsModalOpen(false);
     }
@@ -93,7 +81,7 @@ const MoodJournal: React.FC<MoodJournalProps> = ({ onViewMoodRecommendations }) 
 
   // Handle deleting an entry
   const handleDeleteEntry = (id: string) => {
-    setEntries(entries.filter(entry => entry.id !== id));
+    deleteEntry(id);
   };
 
   // Get recommended films based on a specific mood
@@ -185,19 +173,26 @@ const MoodJournal: React.FC<MoodJournalProps> = ({ onViewMoodRecommendations }) 
   const chartData = prepareChartData();
   const maxCount = chartData.length > 0 ? Math.max(...chartData.map(d => d.count)) : 0;
 
+  // Loading state
+  if (entriesLoading) {
+    return (
+      <div className="bg-gray-900 text-white min-h-screen p-4 font-britti-sans flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500 mx-auto mb-4"></div>
+          <p className="text-gray-400">Loading your mood journal...</p>
+        </div>
+      </div>
+    );
+  }
+  
   return (
     <div className="bg-gray-900 text-white min-h-screen p-4 font-britti-sans">
       <div className="max-w-3xl mx-auto">
         {/* Responsive header - Remove the button from here */}
-        <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
-          <h1 className="text-2xl sm:text-3xl font-bold flex items-center">
-            <Heart className="mr-2 text-accent" size={24} />
-            Mood Journal
-          </h1>
-        </div>
+        
         
         {/* Mood insights with chart */}
-        <div className="mb-8 bg-gray-800/50 rounded-lg p-4">
+        <div className="mb-8 bg-gray-800/50 rounded-lg p-4 mt-12">
           <div className="flex flex-col sm:flex-row justify-between items-center mb-3 gap-3">
             <h2 className="text-xl font-semibold">Your Mood Patterns</h2>
             
