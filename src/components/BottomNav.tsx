@@ -1,16 +1,18 @@
 import React from 'react';
-import { Home, Bookmark, User } from 'lucide-react';
+import { Home, Bookmark, User, BookOpen } from 'lucide-react';
 
 interface BottomNavProps {
   onHomeClick: () => void;
   onWatchlistClick: () => void;
+  onMoodJournalClick?: () => void;
   hasNewItems?: boolean;
-  activeScreen: 'home' | 'discovery' | 'watchlist';
+  activeScreen: 'home' | 'discovery' | 'watchlist' | 'journal';
 }
 
 const BottomNav: React.FC<BottomNavProps> = ({
   onHomeClick,
   onWatchlistClick,
+  onMoodJournalClick,
   hasNewItems = false,
   activeScreen
 }) => {
@@ -29,6 +31,21 @@ const BottomNav: React.FC<BottomNavProps> = ({
           <Home size={20} />
           <span className="text-xs mt-1">Home</span>
         </button>
+        
+        {onMoodJournalClick && (
+          <button 
+            onClick={onMoodJournalClick}
+            className={`flex flex-col items-center justify-center p-2 ${
+              activeScreen === 'journal' 
+                ? 'text-white' 
+                : 'text-gray-500'
+            }`}
+            aria-label="Mood Journal"
+          >
+            <BookOpen size={20} />
+            <span className="text-xs mt-1">Journal</span>
+          </button>
+        )}
         
         <button 
           onClick={onWatchlistClick}

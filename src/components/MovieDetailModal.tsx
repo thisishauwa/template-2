@@ -38,9 +38,36 @@ const MovieDetailModal: React.FC<MovieDetailModalProps> = ({
     ? `https://image.tmdb.org/t/p/w1280${movie.backdrop_path}`
     : null;
     
-  // Use the movie's mood_match if available, otherwise generate a random one
-  // This will be used only when the movie comes from the discovery flow
-  const moodMatchScore = movie.mood_match || Math.floor(Math.random() * 5) + 6;
+  // Use the movie's mood_match if available, otherwise calculate a credible match
+  // This will be used only when the movie comes from outside the discovery flow
+  const calculateMoodMatch = () => {
+    if (movie.mood_match) return movie.mood_match;
+    
+    // Use deterministic factors for a more credible score when no mood_match exists
+    const voteContribution = Math.min(3, (movie.vote_average - 5) / 2); // Up to 3 points for rating
+    
+    // Use vote_count as a proxy for popularity if popularity is not available
+    const popularity = (movie as any).popularity || Math.min(movie.vote_count, 1000);
+    const popularityNormalized = Math.min(1, popularity / 400); // Normalize popularity
+    const popularityContribution = popularityNormalized * 2; // Up to 2 points
+    
+    // Give more contemporary movies a slight edge for most viewers
+    let recencyBonus = 0;
+    if (movie.release_date) {
+      const year = parseInt(movie.release_date.substring(0, 4));
+      const currentYear = new Date().getFullYear();
+      recencyBonus = Math.max(0, 1 - (currentYear - year) / 50); // Gradual falloff
+    }
+    
+    // Base score is 6, add contributions up to a max of 10
+    const calculatedScore = Math.min(10, Math.max(6, 
+      6 + voteContribution + popularityContribution + recencyBonus
+    ));
+    
+    return Math.round(calculatedScore);
+  };
+  
+  const moodMatchScore = calculateMoodMatch();
     
   // Handle share
   const handleShare = async () => {

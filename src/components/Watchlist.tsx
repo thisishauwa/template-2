@@ -19,11 +19,13 @@ interface Movie {
 interface WatchlistProps {
   onClose: () => void;
   initialMovies?: Movie[]; // For backward compatibility
+  showHeader?: boolean; // Controls if the header with close button is shown
 }
 
 const Watchlist: React.FC<WatchlistProps> = ({ 
   onClose,
-  initialMovies = []
+  initialMovies = [],
+  showHeader = true // Default to showing header for backward compatibility
 }) => {
   // State for the watchlist
   const [watchlistMovies, setWatchlistMovies] = useState<Movie[]>([]);
@@ -124,19 +126,33 @@ const Watchlist: React.FC<WatchlistProps> = ({
     ? watchlistMovies.filter(movie => movie.mood === selectedFilter)
     : watchlistMovies;
   
+  // Handle close button click
+  const handleClose = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onClose();
+  };
+  
+  // Determine base container class based on whether header is shown
+  const containerClass = showHeader 
+    ? "fixed inset-0 bg-black/90 backdrop-blur-md z-50 overflow-hidden flex flex-col" 
+    : "flex-1 flex flex-col overflow-hidden";
+  
   return (
-    <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-50 overflow-hidden flex flex-col">
-      {/* Header */}
-      <div className="p-4 border-b border-white/10 flex items-center justify-between sticky top-0 bg-gray-900/80 backdrop-blur-md z-10">
-        <h2 className="text-xl font-bold text-white">My Watchlist</h2>
-        <button 
-          onClick={onClose}
-          className="p-2 rounded-full hover:bg-white/10 transition-colors text-white"
-          aria-label="Close watchlist"
-        >
-          <X size={24} />
-        </button>
-      </div>
+    <div className={containerClass}>
+      {/* Header - only shown when showHeader is true */}
+      {showHeader && (
+        <div className="p-4 border-b border-white/10 flex items-center justify-between sticky top-0 bg-gray-900/80 backdrop-blur-md z-10">
+          <h2 className="text-xl font-bold text-white">My Watchlist</h2>
+          <button 
+            onClick={handleClose}
+            className="p-2 rounded-full hover:bg-white/10 transition-colors text-white"
+            aria-label="Close watchlist"
+          >
+            <X size={24} />
+          </button>
+        </div>
+      )}
       
       {/* Filter bar */}
       {uniqueMoods.length > 0 && (

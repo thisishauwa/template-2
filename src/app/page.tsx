@@ -7,9 +7,10 @@ import Onboarding from '@/components/Onboarding';
 import MovieCardStack from '@/components/MovieCardStack';
 import MovieDetailModal from '@/components/MovieDetailModal';
 import Watchlist from '@/components/Watchlist';
+import MoodJournal from '@/components/MoodJournal';
 import HomeScreen from '@/components/HomeScreen';
 import { Movie, MovieFilters, WatchlistMovie } from '@/types/movie';
-import { Film } from 'lucide-react';
+import { Film, ChevronLeft } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import BottomNav from '@/components/BottomNav';
 import { useRouter } from 'next/navigation';
@@ -33,12 +34,16 @@ const FeelingFlicksApp: React.FC = () => {
   const [showOnboarding, setShowOnboarding] = useState<boolean>(false);
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
   const [showWatchlist, setShowWatchlist] = useState<boolean>(false);
+  const [showMoodJournal, setShowMoodJournal] = useState<boolean>(false);
   const [hasNewItems, setHasNewItems] = useState<boolean>(false);
   const [lastWatchlistCount, setLastWatchlistCount] = useState<number>(0);
+  const [fromMoodJournal, setFromMoodJournal] = useState<boolean>(false);
+  const [watchlistFromDiscovery, setWatchlistFromDiscovery] = useState<boolean>(false);
   
   // Determine active screen for bottom nav
   const getActiveScreen = () => {
     if (showWatchlist) return 'watchlist';
+    if (showMoodJournal) return 'journal';
     if (showHome) return 'home';
     return 'discovery';
   };
@@ -97,6 +102,8 @@ const FeelingFlicksApp: React.FC = () => {
   const handleReturnToHome = () => {
     setShowOnboarding(false);
     setShowWatchlist(false);
+    setWatchlistFromDiscovery(false);
+    setShowMoodJournal(false);
     setShowHome(true);
   };
   
@@ -147,15 +154,64 @@ const FeelingFlicksApp: React.FC = () => {
   
   // Toggle watchlist visibility
   const toggleWatchlist = () => {
+    // If we're already on the watchlist, do nothing
+    if (showWatchlist && !watchlistFromDiscovery) {
+      return;
+    }
+    
+    // If we're in discovery mode, track that to show the close button
+    setWatchlistFromDiscovery(!showHome && !showMoodJournal);
+    
     setShowWatchlist(!showWatchlist);
+    if (showWatchlist) return; // If we're closing it, just return
+    
+    // If we're opening it, close other views
+    setShowHome(false);
+    setShowMoodJournal(false);
     
     // Clear new items notification when opening the watchlist
     if (!showWatchlist) {
       setHasNewItems(false);
     }
+  };
+  
+  // Handle closing watchlist from discovery
+  const handleCloseWatchlist = () => {
+    if (watchlistFromDiscovery) {
+      setShowWatchlist(false);
+      setWatchlistFromDiscovery(false);
+    } else {
+      // If not from discovery, just toggle (this shouldn't happen with the UI changes)
+      toggleWatchlist();
+    }
+  };
+  
+  // Toggle mood journal visibility
+  const toggleMoodJournal = () => {
+    setShowMoodJournal(!showMoodJournal);
+    if (showMoodJournal) return; // If we're closing it, just return
     
-    // Don't reset other states when toggling watchlist
-    // This ensures we preserve location in the swipe stack
+    // If we're opening it, close other views
+    setShowHome(false);
+    setShowWatchlist(false);
+  };
+  
+  // Handle mood recommendations from journal
+  const handleMoodRecommendations = (mood: string) => {
+    // Close mood journal and start discovery with the selected mood
+    setShowMoodJournal(false);
+    setFromMoodJournal(true); // Track that we came from the mood journal
+    fetchMovies({
+      mood,
+      genres: [],
+      decades: [],
+    });
+  };
+  
+  // Handle returning to mood journal from discovery
+  const handleReturnToMoodJournal = () => {
+    setFromMoodJournal(false);
+    setShowMoodJournal(true);
   };
   
   // Show error if fetching movies fails
@@ -178,17 +234,19 @@ const FeelingFlicksApp: React.FC = () => {
   
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-gray-900 to-black text-white">
-      {/* Only show Navbar on home and watchlist screens, not on discovery screen */}
-      {(showHome || showWatchlist) && (
+      {/* Navbar - shown on all screens except discovery or when watchlist is shown as an overlay */}
+      {(showHome || showWatchlist || showMoodJournal) && !watchlistFromDiscovery && (
         <Navbar 
           onWatchlistOpen={toggleWatchlist}
           onHomeClick={handleReturnToHome}
+          onMoodJournalOpen={toggleMoodJournal}
           hasNewItems={hasNewItems}
+          activeScreen={getActiveScreen()}
         />
       )}
       
       {/* Content container with padding for fixed navbar and bottom nav on mobile */}
-      <div className={`${(showHome || showWatchlist) ? 'pt-16' : 'pt-4'} pb-16 md:pb-0 flex-1 flex flex-col`}>
+      <div className={`${(showHome || showWatchlist || showMoodJournal) && !watchlistFromDiscovery ? 'pt-16' : 'pt-4'} pb-16 md:pb-0 flex-1 flex flex-col`}>
         {/* Home Screen */}
         {showHome && (
           <HomeScreen 
@@ -199,20 +257,31 @@ const FeelingFlicksApp: React.FC = () => {
         )}
         
         {/* Movie Discovery Screen */}
-        {!showOnboarding && !showHome && !showWatchlist && (
+        {!showOnboarding && !showHome && !showWatchlist && !showMoodJournal && (
           <main className="flex-1 relative flex flex-col items-center justify-center p-4">
             {/* Discovery Screen Controls */}
             <div className="absolute top-4 right-4 z-10 flex space-x-3">
-              <button
-                onClick={handleReturnToHome}
-                className="p-3 rounded-full bg-gray-800/70 hover:bg-gray-700 transition-colors"
-                aria-label="Return to home"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                  <polyline points="9 22 9 12 15 12 15 22" />
-                </svg>
-              </button>
+              {fromMoodJournal ? (
+                <button
+                  onClick={handleReturnToMoodJournal}
+                  className="p-3 rounded-full bg-gray-800/70 hover:bg-gray-700 transition-colors"
+                  aria-label="Return to mood journal"
+                >
+                  <ChevronLeft size={20} />
+                  <span className="sr-only">Back to Journal</span>
+                </button>
+              ) : (
+                <button
+                  onClick={handleReturnToHome}
+                  className="p-3 rounded-full bg-gray-800/70 hover:bg-gray-700 transition-colors"
+                  aria-label="Return to home"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                    <polyline points="9 22 9 12 15 12 15 22" />
+                  </svg>
+                </button>
+              )}
               <button
                 onClick={toggleWatchlist}
                 className="p-3 rounded-full bg-gray-800/70 hover:bg-gray-700 transition-colors relative"
@@ -237,6 +306,12 @@ const FeelingFlicksApp: React.FC = () => {
               </button>
             </div>
             
+            {fromMoodJournal && (
+              <div className="absolute top-4 left-4 z-10 px-3 py-1.5 rounded-lg bg-gray-800/70">
+                <span className="text-sm font-medium text-gray-300">Mood Journal Films</span>
+              </div>
+            )}
+            
             <MovieCardStack
               movies={movies}
               loading={loading}
@@ -249,6 +324,22 @@ const FeelingFlicksApp: React.FC = () => {
             />
           </main>
         )}
+        
+        {/* Mood Journal Screen */}
+        {showMoodJournal && (
+          <MoodJournal onViewMoodRecommendations={handleMoodRecommendations} />
+        )}
+        
+        {/* Watchlist Screen (when accessed from nav) */}
+        {showWatchlist && !watchlistFromDiscovery && (
+          <div className="flex-1 overflow-auto">
+            <Watchlist
+              onClose={handleCloseWatchlist}
+              initialMovies={watchlist as any[]}
+              showHeader={false} // Don't show the header with close button when accessed from nav
+            />
+          </div>
+        )}
       </div>
       
       {/* Onboarding - rendered on top with fixed positioning */}
@@ -259,11 +350,12 @@ const FeelingFlicksApp: React.FC = () => {
         />
       )}
       
-      {/* Watchlist view */}
-      {showWatchlist && (
+      {/* Watchlist overlay (only when accessed from discovery screen) */}
+      {showWatchlist && watchlistFromDiscovery && (
         <Watchlist
-          onClose={toggleWatchlist}
+          onClose={handleCloseWatchlist}
           initialMovies={watchlist as any[]}
+          showHeader={true} // Show header with close button when accessed as overlay
         />
       )}
       
@@ -287,11 +379,12 @@ const FeelingFlicksApp: React.FC = () => {
         )}
       </AnimatePresence>
       
-      {/* Bottom Navigation - only visible on mobile, home and watchlist screens (not during discovery or onboarding) */}
-      {!showOnboarding && (showHome || showWatchlist) && (
+      {/* Bottom Navigation - only visible on mobile */}
+      {(showHome || showWatchlist || showMoodJournal) && (
         <BottomNav
           onHomeClick={handleReturnToHome}
           onWatchlistClick={toggleWatchlist}
+          onMoodJournalClick={toggleMoodJournal}
           hasNewItems={hasNewItems}
           activeScreen={getActiveScreen()}
         />

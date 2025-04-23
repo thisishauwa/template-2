@@ -59,8 +59,34 @@ const MovieCard: React.FC<MovieCardProps> = ({
     ? `https://image.tmdb.org/t/p/w780${movie.backdrop_path}`
     : null;
     
-  // Format mood match score (from 1-10 instead of descriptive text)
-  const moodMatchScore = Math.floor(Math.random() * 5) + 6; // Random score between 6-10
+  // Format mood match score using a deterministic algorithm instead of random number
+  const calculateMoodMatch = () => {
+    if (movie.mood_match) return movie.mood_match;
+    
+    // Use deterministic factors for a credible score
+    const voteContribution = Math.min(3, (movie.vote_average - 5) / 2); // Up to 3 points for rating
+    
+    // Modify based on vote count as a proxy for popularity/credibility
+    const voteCountNormalized = Math.min(1, movie.vote_count / 1000);
+    const popularityContribution = voteCountNormalized * 2; // Up to 2 points
+    
+    // Newer movies often resonate better with current audience moods
+    let recencyBonus = 0;
+    if (movie.release_date) {
+      const year = parseInt(movie.release_date.substring(0, 4));
+      const currentYear = new Date().getFullYear();
+      recencyBonus = Math.max(0, 1 - (currentYear - year) / 50); // Gradual falloff
+    }
+    
+    // Base score is 6, add contributions up to a max of 10
+    const calculatedScore = Math.min(10, Math.max(6, 
+      6 + voteContribution + popularityContribution + recencyBonus
+    ));
+    
+    return Math.round(calculatedScore);
+  };
+  
+  const moodMatchScore = calculateMoodMatch();
   
   const [copied, setCopied] = useState(false);
   
@@ -123,7 +149,7 @@ const MovieCard: React.FC<MovieCardProps> = ({
         <div className="bg-black/30 backdrop-blur-sm p-3 rounded-lg mb-4 border border-white/10 flex items-center justify-between">
           <p className="text-white/90">Mood Match</p>
           <div className="flex items-center gap-1">
-            <span className="text-yellow-400 font-bold">{matchScore}</span>
+            <span className="text-yellow-400 font-bold">{moodMatchScore}</span>
             <span className="text-white/70">/10</span>
           </div>
         </div>

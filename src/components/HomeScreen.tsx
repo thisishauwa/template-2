@@ -153,18 +153,18 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
         {/* Hero section */}
         <div className="mb-12 text-center">
           <h1 className="text-4xl md:text-5xl font-bold mb-3 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-            Feeling Flicks
+            Feeling things?
           </h1>
-          <p className="text-gray-300 mb-8 max-w-lg mx-auto">
-            Discover movies based on your mood and taste. Find the perfect film for any occasion.
+          <p className="text-lg md:text-xl text-gray-300 mb-8 max-w-lg mx-auto">
+            Same. Let’s find the right film for right now.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <button
               className="w-full sm:w-auto px-8 py-4 bg-purple-600 hover:bg-purple-700 transition-colors rounded-xl font-medium flex items-center gap-2 justify-center"
               onClick={onStartSwipe}
             >
-              <ListFilter size={20} />
-              <span>Find Movies by Mood</span>
+              
+              <span>Show me the money</span>
             </button>
             
             
@@ -175,7 +175,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
         <section className="mb-12">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold flex items-center">
-              <Flame className="text-yellow-500 mr-2" size={24} />
+              
               Trending This Week
             </h2>
             <button className="text-purple-400 flex items-center hover:text-purple-300 transition-colors">
@@ -218,7 +218,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
         <section className="mb-12">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold flex items-center">
-              <TrendingUp className="text-purple-500 mr-2" size={24} />
+             
               Popular Today
             </h2>
             <button className="text-purple-400 flex items-center hover:text-purple-300 transition-colors">

@@ -516,13 +516,52 @@ export async function POST(request: Request) {
     
     // Add calculated vibe match score and description to each movie
     let moviesWithMatch = data.results.map((movie: any) => {
-      // Real algorithm based on genre match and other factors
-      // For now we'll calculate a score based on genre overlap
-      const genreMatchCount = movie.genre_ids.filter((id: number) => finalGenres.includes(id)).length;
-      const genreMatchScore = Math.min(10, Math.max(6, Math.floor((genreMatchCount / Math.max(1, finalGenres.length)) * 10)));
+      // Calculate mood match score based on multiple factors
       
-      // Generate a score between 6-10 with some randomness but weighted by actual match
-      const vibeMatchScore = Math.min(10, Math.max(6, genreMatchScore + (Math.random() > 0.5 ? 1 : 0)));
+      // 1. Genre match: How well the movie's genres match the requested genres
+      const genreOverlap = movie.genre_ids.filter((id: number) => finalGenres.includes(id)).length;
+      const genreScore = Math.min(5, (genreOverlap / Math.max(1, finalGenres.length)) * 5);
+      
+      // 2. Keyword match: Check for the presence of mood-specific keywords
+      const keywordBonus = mood && mood !== 'any' && MOOD_MAPPINGS[mood] ? 2 : 0;
+      
+      // 3. Popularity factor: More popular movies get a slight boost
+      // Normalize popularity which ranges from 0 to ~2000 on TMDB
+      const normalizedPopularity = Math.min(1, movie.popularity / 500);
+      const popularityBonus = normalizedPopularity * 0.5;
+      
+      // 4. Rating factor: Higher rated movies get a boost
+      const ratingBonus = Math.min(1.5, (movie.vote_average - 5) / 2);
+      
+      // 5. Recency factor: For certain moods, newer films get a slight boost
+      const recencyMoods = ['chaotic', 'hopeful', 'chill'];
+      let recencyBonus = 0;
+      
+      if (mood && recencyMoods.includes(mood) && movie.release_date) {
+        const releaseYear = parseInt(movie.release_date.substring(0, 4));
+        const currentYear = new Date().getFullYear();
+        // Calculate a recency bonus that maxes out at 1 for movies from the last 5 years
+        recencyBonus = Math.min(1, Math.max(0, (currentYear - releaseYear < 5) ? 1 : 0));
+      }
+      
+      // 6. Decade match factor: Movies from the requested decades get a bonus
+      let decadeBonus = 0;
+      if (decades && decades.length > 0 && movie.release_date) {
+        const releaseYear = parseInt(movie.release_date.substring(0, 4));
+        const decade = Math.floor(releaseYear / 10) * 10;
+        const decadeString = `${decade}s`;
+        
+        if (decades.includes(decadeString)) {
+          decadeBonus = 1.5;
+        }
+      }
+      
+      // Calculate the final score (base of 5 plus all the factors)
+      // Scale is 1-10 with 6-10 being the display range
+      let rawScore = 5 + genreScore + keywordBonus + popularityBonus + ratingBonus + recencyBonus + decadeBonus;
+      
+      // Normalize to our 6-10 range for display
+      const vibeMatchScore = Math.min(10, Math.max(6, Math.round(rawScore)));
       
       return {
         ...movie,

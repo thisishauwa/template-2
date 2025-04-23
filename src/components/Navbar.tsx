@@ -1,18 +1,22 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Bookmark, User } from 'lucide-react';
+import { Bookmark, User, BookOpen, Home } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 
 interface NavbarProps {
   onWatchlistOpen?: () => void;
   onHomeClick?: () => void;
+  onMoodJournalOpen?: () => void;
   hasNewItems?: boolean;
+  activeScreen?: 'home' | 'watchlist' | 'journal' | 'discovery';
 }
 
 const Navbar: React.FC<NavbarProps> = ({ 
   onWatchlistOpen, 
   onHomeClick,
-  hasNewItems = false
+  onMoodJournalOpen,
+  hasNewItems = false,
+  activeScreen = 'home'
 }) => {
   const pathname = usePathname();
   const router = useRouter();
@@ -39,13 +43,45 @@ const Navbar: React.FC<NavbarProps> = ({
         
         {/* Menu buttons for desktop */}
         <div className="hidden md:flex items-center space-x-6">
+          {/* Home button */}
+          <button 
+            onClick={onHomeClick}
+            className={`flex items-center transition-colors ${
+              activeScreen === 'home' 
+                ? 'text-white font-medium' 
+                : 'text-gray-400 hover:text-white'
+            }`}
+            aria-label="Go to home"
+          >
+            <Home className="w-5 h-5 mr-1.5" />
+            <span>Home</span>
+          </button>
           
+          {/* Mood Journal Button */}
+          {onMoodJournalOpen && (
+            <button 
+              onClick={onMoodJournalOpen}
+              className={`flex items-center transition-colors ${
+                activeScreen === 'journal' 
+                  ? 'text-white font-medium' 
+                  : 'text-gray-400 hover:text-white'
+              }`}
+              aria-label="Open mood journal"
+            >
+              <BookOpen className="w-5 h-5 mr-1.5" />
+              <span>Mood Journal</span>
+            </button>
+          )}
           
           {/* Watchlist Button */}
           {onWatchlistOpen && (
             <button 
               onClick={onWatchlistOpen}
-              className="flex items-center text-gray-300 hover:text-white transition-colors relative"
+              className={`flex items-center transition-colors relative ${
+                activeScreen === 'watchlist' 
+                  ? 'text-white font-medium' 
+                  : 'text-gray-400 hover:text-white'
+              }`}
               aria-label="Open watchlist"
             >
               <Bookmark className="w-5 h-5 mr-1.5" />
