@@ -255,7 +255,7 @@ const MoodJournal: React.FC<MoodJournalProps> = ({ onViewMoodRecommendations }) 
               {/* Removed mood chips here */}
               
               <p className="text-sm text-gray-400">
-                Based on your journal, you have most frequently felt{' '}
+                Based on your journal, you&apos;ve most frequently felt{' '}
                 <button 
                   onClick={() => moodFrequency[0]?.mood && handleGetRecommendations(moodFrequency[0].mood)}
                   className="text-primary-light font-medium hover:underline focus:outline-none"

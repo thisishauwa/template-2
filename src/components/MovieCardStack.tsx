@@ -115,7 +115,7 @@ const MovieCardStack: React.FC<MovieCardStackProps> = ({
             <RefreshCw className="text-purple-400" size={24} />
           </div>
           <h3 className="text-xl font-bold text-white mb-2">No more movies to show</h3>
-          <p className="text-gray-400 mb-6 max-w-xs">We have run out of recommendations. Try adjusting your preferences or refreshing.</p>
+          <p className="text-gray-400 mb-6 max-w-xs">We&apos;ve run out of recommendations. Try adjusting your preferences or refreshing.</p>
           <button
             className="px-5 py-3 bg-purple-600 hover:bg-purple-700 transition-colors rounded-xl font-medium text-white"
             onClick={onRefresh}
