@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
-import { X, Share2, Filter, ChevronDown } from 'lucide-react';
-import { format } from 'date-fns';
+import { X, Share2, Filter, ChevronDown, Film, Search, Calendar, CalendarRange } from 'lucide-react';
+import { format, formatDistance } from 'date-fns';
 import { useMovies } from '../lib/contexts/MovieContext';
+import { getTMDBImageUrl } from '@/lib/utils';
 
 interface WatchlistProps {
   onClose: () => void;
@@ -189,7 +190,7 @@ const Watchlist: React.FC<WatchlistProps> = ({
                 >
                   <div className="aspect-[2/3] relative">
                     <Image 
-                      src={movie.poster_path ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` : '/placeholder-poster.jpg'} 
+                      src={getTMDBImageUrl(movie.poster_path)}
                       alt={movie.title}
                       fill
                       sizes="(max-width: 768px) 150px, 200px"
@@ -218,7 +219,9 @@ const Watchlist: React.FC<WatchlistProps> = ({
             <div className={`md:w-96 bg-gray-900 p-0 flex flex-col overflow-y-auto ${selectedMovie ? 'flex' : 'hidden md:flex'}`}>
               <div className="relative aspect-video w-full">
                 <Image 
-                  src={selectedMovie.backdrop_path ? `https://image.tmdb.org/t/p/w780${selectedMovie.backdrop_path}` : (selectedMovie.poster_path ? `https://image.tmdb.org/t/p/w500${selectedMovie.poster_path}` : '/placeholder-poster.jpg')} 
+                  src={selectedMovie.backdrop_path 
+                    ? getTMDBImageUrl(selectedMovie.backdrop_path, 'w780') 
+                    : getTMDBImageUrl(selectedMovie.poster_path)}
                   alt={selectedMovie.title}
                   fill
                   sizes="(max-width: 768px) 100vw, 384px"

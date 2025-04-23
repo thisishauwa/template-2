@@ -5,6 +5,7 @@ import { Movie } from '@/types/movie';
 import { GENRES } from '@/types/movie';
 import { format } from 'date-fns';
 import { X, Share2 } from 'lucide-react';
+import { getTMDBImageUrl } from '@/lib/utils';
 
 interface MovieDetailModalProps {
   movie: Movie | null;
@@ -35,7 +36,7 @@ const MovieDetailModal: React.FC<MovieDetailModalProps> = ({
     
   // Get backdrop URL
   const backdropUrl = movie.backdrop_path 
-    ? `https://image.tmdb.org/t/p/w1280${movie.backdrop_path}`
+    ? getTMDBImageUrl(movie.backdrop_path, 'w1280')
     : null;
     
   // Use the movie's mood_match if available, otherwise calculate a credible match
@@ -146,7 +147,7 @@ const MovieDetailModal: React.FC<MovieDetailModalProps> = ({
             {/* Poster */}
             <div className="relative w-32 h-48 md:w-40 md:h-60 flex-shrink-0 -mt-20 mx-auto md:mx-0 z-10">
               <Image 
-                src={movie.poster_path ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` : '/placeholder-poster.jpg'}
+                src={getTMDBImageUrl(movie.poster_path)}
                 alt={movie.title}
                 fill
                 sizes="(max-width: 768px) 128px, 160px"

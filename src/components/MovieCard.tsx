@@ -5,6 +5,7 @@ import { Movie } from '@/types/movie';
 import { GENRES } from '@/types/movie';
 import { format } from 'date-fns';
 import { Heart, Share2, Bookmark, BookmarkCheck, Info } from 'lucide-react';
+import { getTMDBImageUrl } from '@/lib/utils';
 
 interface MovieCardProps {
   movie: Movie;
@@ -131,7 +132,7 @@ const MovieCard: React.FC<MovieCardProps> = ({
       {/* Movie poster */}
       <div className="relative h-[500px] w-full">
         <Image 
-          src={movie.poster_path ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` : '/placeholder-poster.jpg'} 
+          src={getTMDBImageUrl(movie.poster_path)}
           alt={movie.title}
           fill
           sizes="(max-width: 768px) 100vw, 500px"

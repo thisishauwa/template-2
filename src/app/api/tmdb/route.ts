@@ -219,12 +219,9 @@ export async function POST(request: Request) {
         popularity: movie.popularity,
         vote_average: movie.vote_average,
         vote_count: movie.vote_count,
-        poster_path: movie.poster_path 
-          ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` 
-          : null,
-        backdrop_path: movie.backdrop_path 
-          ? `https://image.tmdb.org/t/p/w1280${movie.backdrop_path}` 
-          : null,
+        // Return only the path, not the full URL
+        poster_path: movie.poster_path || null,
+        backdrop_path: movie.backdrop_path || null,
         genre_ids: movie.genre_ids || [],
       }));
       
@@ -636,9 +633,7 @@ export async function POST(request: Request) {
         ...movie,
         mood_match: vibeMatchScore,
         vibe_description: moodParams.vibe_description || "A good match for your mood",
-        poster_path: movie.poster_path 
-          ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` 
-          : null,
+        poster_path: movie.poster_path || null,
       };
     });
     
@@ -791,9 +786,7 @@ export async function GET(request: Request) {
       // Transform movie data for the curated path
       const processedMovies = data.results.map((movie: any) => ({
         ...movie,
-        poster_path: movie.poster_path 
-          ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` 
-          : null,
+        poster_path: movie.poster_path || null,
         mood_match: 9, // Curated paths have high match scores
         vibe_description: path.description
       }));
@@ -832,9 +825,7 @@ export async function GET(request: Request) {
     // Transform movie data
     const processedMovies = data.results.map((movie: any) => ({
       ...movie,
-      poster_path: movie.poster_path 
-        ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` 
-        : null,
+      poster_path: movie.poster_path || null,
     }));
     
     return NextResponse.json({ 
