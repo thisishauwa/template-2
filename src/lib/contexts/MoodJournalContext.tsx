@@ -39,6 +39,7 @@ export const MoodJournalProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const { user, isAnonymous } = useAuth();
 
   // Load entries from Firestore (if logged in) or localStorage on initial render
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     let unsubscribeFirestore: (() => void) | undefined;
     
@@ -138,6 +139,7 @@ export const MoodJournalProvider: React.FC<{ children: React.ReactNode }> = ({ c
   }, [user, isAnonymous]);
 
   // Save entries to localStorage whenever they change (as a backup)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (entries.length > 0) {
       try {

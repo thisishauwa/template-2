@@ -128,19 +128,27 @@ const MovieCardStack: React.FC<MovieCardStackProps> = ({
           <AnimatePresence>
             {/* Display top 3 cards from the stack */}
             {movies
-              .slice(currentIndex, currentIndex + 3)
-              .map((movie, index) => (
-                <MovieCard
-                  key={movie.id}
-                  movie={movie}
-                  onSwipeLeft={handleSwipeLeft}
-                  onSwipeRight={handleSwipeRight}
-                  onCardTap={onCardTap}
-                  onSelect={() => {}} 
-                  onAddToWatchlist={(movie) => onSwipeRight(movie)}
-                  isInWatchlist={false}
-                />
-              ))}
+  .slice(currentIndex, currentIndex + 3)
+  .map((movie, index) => {
+    // Create a safe movie object
+    const safeMovie = {
+      ...movie,
+      title: String(movie.title || '').replace(/&/g, '&').replace(/</g, '<'),
+      overview: String(movie.overview || '').replace(/&/g, '&').replace(/</g, '<'),
+    };
+    return (
+      <MovieCard
+        key={movie.id}
+        movie={safeMovie}
+        onSwipeLeft={handleSwipeLeft}
+        onSwipeRight={handleSwipeRight}
+        onCardTap={onCardTap}
+        onSelect={() => {}}
+        onAddToWatchlist={(movie) => onSwipeRight(movie)}
+        isInWatchlist={false}
+      />
+    );
+  })}
           </AnimatePresence>
         </div>
       )}

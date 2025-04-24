@@ -100,6 +100,7 @@ const FeelingFlicksApp: React.FC = () => {
   }, [watchlist, showHome, fetchMovies]);
   
   // Monitor watchlist for changes
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     // If watchlist count has increased since last check, set notification flag
     if (watchlist.length > lastWatchlistCount) {

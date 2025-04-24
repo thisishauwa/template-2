@@ -3,6 +3,7 @@ import { format, parseISO, isAfter, isBefore, startOfMonth, endOfMonth, subDays 
 import { Calendar, Heart, Film, Edit3, Trash2, ChevronLeft, ChevronRight, Calendar as CalendarIcon, Filter, X } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useAuth } from '../lib/hooks/useAuth';
+import DOMPurify from 'dompurify';
 import { useMoodJournal, MoodEntry } from '../lib/contexts/MoodJournalContext';
 
 // Types for mood journal entries
@@ -244,8 +245,8 @@ const MoodJournal: React.FC<MoodJournalProps> = ({ onViewMoodRecommendations }) 
                       </div>
                       <div className="w-full text-center">
                         <span className="text-xs capitalize truncate block">
-                          {mood}
-                        </span>
+  {String(mood).replace(/&/g, '&').replace(/</g, '<')}
+</span>
                       </div>
                     </div>
                   ))}
@@ -342,7 +343,7 @@ const MoodJournal: React.FC<MoodJournalProps> = ({ onViewMoodRecommendations }) 
                       }`}
                       onClick={() => setSelectedMoodFilter(mood === selectedMoodFilter ? null : mood)}
                     >
-                      {mood}
+                   {String(mood).replace(/&/g, '&').replace(/</g, '<')}
                     </button>
                   ))}
                 </div>
@@ -375,8 +376,8 @@ const MoodJournal: React.FC<MoodJournalProps> = ({ onViewMoodRecommendations }) 
                       <div className="flex justify-between items-start mb-2">
                         <div className="flex items-center gap-2">
                           <span className="px-2 py-0.5 bg-primary/20 text-primary-light rounded capitalize text-sm">
-                            {entry.mood}
-                          </span>
+  {String(entry.mood).replace(/&/g, '&').replace(/</g, '<')}
+</span>
                           <span className="text-gray-400 text-sm flex items-center">
                             <CalendarIcon size={14} className="mr-1" />
                             {format(new Date(entry.date), 'MMM d, yyyy')}
@@ -391,7 +392,7 @@ const MoodJournal: React.FC<MoodJournalProps> = ({ onViewMoodRecommendations }) 
                         </button>
                       </div>
                       
-                      {entry.note && <p className="text-gray-300 mt-2">{entry.note}</p>}
+                      {entry.note && <p className="text-gray-300 mt-2">{String(entry.note).replace(/&/g, '&').replace(/</g, '<')}</p>}
                       
                       {entry.films && entry.films.length > 0 && (
                         <div className="mt-3 border-t border-gray-700 pt-3">
@@ -402,7 +403,7 @@ const MoodJournal: React.FC<MoodJournalProps> = ({ onViewMoodRecommendations }) 
                           <div className="flex flex-wrap gap-2">
                             {entry.films.map(film => (
                               <div key={film.id} className="bg-gray-700/50 px-2 py-1 rounded text-xs">
-                                {film.title}
+                                {String(film.title).replace(/&/g, '&').replace(/</g, '<')}
                               </div>
                             ))}
                           </div>
@@ -461,7 +462,7 @@ const MoodJournal: React.FC<MoodJournalProps> = ({ onViewMoodRecommendations }) 
                               </button>
                             </div>
                             
-                            {entry.note && <p className="text-gray-300 mb-3">{entry.note}</p>}
+                            {entry.note && <p className="text-gray-300 mb-3">{String(entry.note).replace(/&/g, '&').replace(/</g, '<')}</p>}
                             
                             {entry.films && entry.films.length > 0 && (
                               <div className="mt-3">
@@ -472,7 +473,7 @@ const MoodJournal: React.FC<MoodJournalProps> = ({ onViewMoodRecommendations }) 
                                 <div className="flex flex-wrap gap-2">
                                   {entry.films.map(film => (
                                     <div key={film.id} className="bg-gray-700/50 px-2 py-1 rounded text-xs">
-                                      {film.title}
+                                      {String(film.title).replace(/&/g, '&').replace(/</g, '<')}
                                     </div>
                                   ))}
                                 </div>

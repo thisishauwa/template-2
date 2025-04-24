@@ -40,7 +40,7 @@ const MoodSelector: React.FC<MoodSelectorProps> = ({
               transition={{ duration: 0.2 }}
             >
               {mood.icon && <span className="mr-2 text-lg">{mood.icon}</span>}
-              <span className="font-medium capitalize">{mood.label}</span>
+              <span className="font-medium capitalize">{String(mood.label).replace(/&/g, '&').replace(/</g, '<')}</span>
             </motion.button>
           ))}
         </div>

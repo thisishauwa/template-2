@@ -157,9 +157,9 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
       <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white flex items-center justify-center p-4">
         <div className="bg-gray-800/70 p-6 rounded-xl max-w-md text-center">
           <h2 className="text-xl font-bold mb-4">Something went wrong</h2>
-          <p className="text-gray-300 mb-6">{error}</p>
-          <button 
-            className="px-6 py-3 bg-purple-600 hover:bg-purple-700 transition-colors rounded-xl font-medium"
+          <p className="text-gray-300 mb-6">{String(error).replace(/&/g, '&').replace(/</g, '<')}</p>
+            <button 
+              className="px-6 py-3 bg-purple-600 hover:bg-purple-700 transition-colors rounded-xl font-medium"
             onClick={() => window.location.reload()}
           >
             Try Again
@@ -230,7 +230,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
                       className="object-cover rounded-lg"
                     />
                   </div>
-                  <h3 className="text-sm font-medium text-white truncate">{movie.title}</h3>
+                  <h3 className="text-sm font-medium text-white truncate">{String(movie.title).replace(/&/g, '&').replace(/</g, '<')}</h3>
                 </motion.div>
               ))}
             </motion.div>
@@ -273,7 +273,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
                       className="object-cover rounded-lg"
                     />
                   </div>
-                  <h3 className="text-sm font-medium text-white truncate">{movie.title}</h3>
+                <h3 className="text-sm font-medium text-white truncate">{String(movie.title).replace(/&/g, '&').replace(/</g, '<')}</h3>
                 </motion.div>
               ))}
             </motion.div>
@@ -313,7 +313,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
                         className="object-cover rounded-lg"
                       />
                     </div>
-                    <h3 className="text-sm font-medium text-white truncate">{movie.title}</h3>
+                    <h3 className="text-sm font-medium text-white truncate">{String(movie.title).replace(/&/g, '&').replace(/</g, '<')}</h3>
                   </motion.div>
                 ))}
               </motion.div>

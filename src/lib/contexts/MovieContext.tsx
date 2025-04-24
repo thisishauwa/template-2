@@ -32,6 +32,7 @@ export const MovieProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const { user, isAnonymous } = useAuth();
 
   // Load watchlist from Firestore (if logged in) or localStorage on initial render
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     let unsubscribeFirestore: (() => void) | undefined;
     
@@ -125,6 +126,7 @@ export const MovieProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, [user, isAnonymous]);
 
   // Save watchlist to localStorage whenever it changes (as a backup)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     // Skip if watchlist is empty to avoid clearing localStorage during initialization
     if (watchlist.length > 0) {
