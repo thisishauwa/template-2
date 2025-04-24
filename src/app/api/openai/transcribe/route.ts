@@ -2,11 +2,33 @@ import { NextResponse } from "next/server";
 import fs from "fs";
 import OpenAI from "openai";
 
-const openai = new OpenAI();
+// Check if OpenAI API key exists
+const openaiApiKey = process.env.OPENAI_API_KEY;
+let openai: OpenAI | null = null;
+
+try {
+  if (openaiApiKey) {
+    openai = new OpenAI({
+      apiKey: openaiApiKey
+    });
+  }
+} catch (error) {
+  console.error("Failed to initialize OpenAI client:", error);
+}
 
 export async function POST(req: Request) {
-  const body = await req.json();
+  // If OpenAI client is not initialized, return an appropriate response
+  if (!openai) {
+    return NextResponse.json(
+      { 
+        error: "OpenAI API key is not configured. Please set the OPENAI_API_KEY environment variable.", 
+        text: "" 
+      },
+      { status: 503 }
+    );
+  }
 
+  const body = await req.json();
   const base64Audio = body.audio;
 
   // Convert the base64 audio data to a Buffer
