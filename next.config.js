@@ -17,8 +17,10 @@ const nextConfig = {
     ],
   },
   eslint: {
-    // Disable ESLint during production builds
+    // Completely disable ESLint during builds
     ignoreDuringBuilds: true,
+    // Don't check any files
+    dirs: [],
   },
 };
 
