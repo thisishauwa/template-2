@@ -8,6 +8,11 @@ import { doc, getDoc, collection, query, where, getDocs } from "firebase/firesto
  */
 export const checkUserAuth = async () => {
   try {
+    // Check if Firebase is properly initialized
+    if (!auth) {
+      return { isAuthenticated: false, userId: null };
+    }
+
     // Check if running in browser
     if (typeof window !== 'undefined') {
       // Client-side
@@ -29,6 +34,12 @@ export const checkUserAuth = async () => {
  * Will return null for server-side execution without proper token validation
  */
 export const safeGetUserDocument = async (collectionName: string, docId: string) => {
+  // Check if Firebase is properly initialized
+  if (!db) {
+    console.warn("Firebase Firestore not initialized");
+    return null;
+  }
+
   const { isAuthenticated, userId } = await checkUserAuth();
   
   if (!isAuthenticated || !userId) {
@@ -54,6 +65,12 @@ export const safeGetUserDocument = async (collectionName: string, docId: string)
  * Safely gets all documents in a collection for a user if they are authenticated
  */
 export const safeGetUserCollection = async (collectionName: string) => {
+  // Check if Firebase is properly initialized
+  if (!db) {
+    console.warn("Firebase Firestore not initialized");
+    return [];
+  }
+
   const { isAuthenticated, userId } = await checkUserAuth();
   
   if (!isAuthenticated || !userId) {
