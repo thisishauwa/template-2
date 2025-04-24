@@ -30,10 +30,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Initialize anonymous authentication
   useEffect(() => {
+    // If Firebase auth is not initialized, set loading to false and return
+    if (!auth) {
+      console.warn("Firebase auth is not initialized. Skipping authentication setup.");
+      setLoading(false);
+      return () => {};
+    }
+
     const initAuth = async () => {
       try {
         // Check if we already have a user
-        if (!auth.currentUser) {
+        if (auth && !auth.currentUser) {
           // If no user is logged in, attempt to create an anonymous account
           console.log("No user found, attempting to create anonymous account");
           try {
@@ -68,6 +75,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signInWithGoogle = async () => {
+    // Skip if auth is not initialized
+    if (!auth) {
+      console.warn("Cannot sign in with Google: Firebase auth is not initialized");
+      return;
+    }
+
     const provider = new GoogleAuthProvider();
     
     try {
@@ -97,6 +110,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signInAnonymouslyFn = async () => {
+    // Skip if auth is not initialized
+    if (!auth) {
+      console.warn("Cannot sign in anonymously: Firebase auth is not initialized");
+      return;
+    }
+
     try {
       // Only sign in anonymously if no current user
       if (!auth.currentUser) {
@@ -110,6 +129,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOutUser = async () => {
+    // Skip if auth is not initialized
+    if (!auth) {
+      console.warn("Cannot sign out: Firebase auth is not initialized");
+      return;
+    }
+
     try {
       console.log("Signing out user...");
       await firebaseSignOut(auth);
