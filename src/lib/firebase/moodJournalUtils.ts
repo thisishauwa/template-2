@@ -31,6 +31,12 @@ export interface MoodEntry {
  * @returns Promise with array of mood entries
  */
 export const getUserMoodEntries = async (): Promise<MoodEntry[]> => {
+  // Check if Firebase is properly initialized
+  if (!auth || !db) {
+    console.warn("Firebase not initialized, cannot get mood entries");
+    return [];
+  }
+
   const user = auth.currentUser;
   if (!user) {
     console.error("No authenticated user found");
@@ -60,6 +66,12 @@ export const getUserMoodEntries = async (): Promise<MoodEntry[]> => {
  * @returns The ID of the new entry
  */
 export const addMoodEntry = async (entry: Omit<MoodEntry, "id">): Promise<string> => {
+  // Check if Firebase is properly initialized
+  if (!auth || !db) {
+    console.warn("Firebase not initialized, cannot add mood entry");
+    throw new Error("Firebase not initialized");
+  }
+
   const user = auth.currentUser;
   if (!user) {
     throw new Error("No authenticated user found");
@@ -85,6 +97,12 @@ export const addMoodEntry = async (entry: Omit<MoodEntry, "id">): Promise<string
  * @param updates The updates to apply
  */
 export const updateMoodEntry = async (entryId: string, updates: Partial<MoodEntry>): Promise<void> => {
+  // Check if Firebase is properly initialized
+  if (!auth || !db) {
+    console.warn("Firebase not initialized, cannot update mood entry");
+    throw new Error("Firebase not initialized");
+  }
+
   const user = auth.currentUser;
   if (!user) {
     throw new Error("No authenticated user found");
@@ -104,6 +122,12 @@ export const updateMoodEntry = async (entryId: string, updates: Partial<MoodEntr
  * @param entryId The ID of the entry to delete
  */
 export const deleteMoodEntry = async (entryId: string): Promise<void> => {
+  // Check if Firebase is properly initialized
+  if (!auth || !db) {
+    console.warn("Firebase not initialized, cannot delete mood entry");
+    throw new Error("Firebase not initialized");
+  }
+
   const user = auth.currentUser;
   if (!user) {
     throw new Error("No authenticated user found");
@@ -124,6 +148,12 @@ export const deleteMoodEntry = async (entryId: string): Promise<void> => {
  * @returns Promise with array of filtered mood entries
  */
 export const getMoodEntriesByMood = async (mood: string): Promise<MoodEntry[]> => {
+  // Check if Firebase is properly initialized
+  if (!auth || !db) {
+    console.warn("Firebase not initialized, cannot get mood entries by mood");
+    return [];
+  }
+
   const user = auth.currentUser;
   if (!user) {
     console.error("No authenticated user found");

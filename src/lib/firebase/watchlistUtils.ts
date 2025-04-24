@@ -29,6 +29,12 @@ export interface Movie {
  * @returns Promise with array of movies
  */
 export const getUserWatchlist = async (): Promise<Movie[]> => {
+  // Check if Firebase is properly initialized
+  if (!auth || !db) {
+    console.warn("Firebase not initialized, cannot get watchlist");
+    return [];
+  }
+
   const user = auth.currentUser;
   if (!user) {
     console.error("No authenticated user found");
@@ -56,6 +62,12 @@ export const getUserWatchlist = async (): Promise<Movie[]> => {
  * @param movie The movie to add
  */
 export const addMovieToWatchlist = async (movie: Movie): Promise<void> => {
+  // Check if Firebase is properly initialized
+  if (!auth || !db) {
+    console.warn("Firebase not initialized, cannot add movie to watchlist");
+    throw new Error("Firebase not initialized");
+  }
+
   const user = auth.currentUser;
   if (!user) {
     throw new Error("No authenticated user found");
@@ -76,6 +88,12 @@ export const addMovieToWatchlist = async (movie: Movie): Promise<void> => {
  * @returns Whether the movie is in the watchlist
  */
 export const isMovieInWatchlist = async (movieId: number): Promise<boolean> => {
+  // Check if Firebase is properly initialized
+  if (!auth || !db) {
+    console.warn("Firebase not initialized, cannot check watchlist");
+    return false;
+  }
+
   const user = auth.currentUser;
   if (!user) {
     console.error("No authenticated user found");
@@ -97,6 +115,12 @@ export const isMovieInWatchlist = async (movieId: number): Promise<boolean> => {
  * @param movieId The ID of the movie to remove
  */
 export const removeMovieFromWatchlist = async (movieId: number): Promise<void> => {
+  // Check if Firebase is properly initialized
+  if (!auth || !db) {
+    console.warn("Firebase not initialized, cannot remove movie from watchlist");
+    throw new Error("Firebase not initialized");
+  }
+
   const user = auth.currentUser;
   if (!user) {
     throw new Error("No authenticated user found");
@@ -117,6 +141,12 @@ export const removeMovieFromWatchlist = async (movieId: number): Promise<void> =
  * @returns Promise with array of filtered movies
  */
 export const getWatchlistByMood = async (mood: string): Promise<Movie[]> => {
+  // Check if Firebase is properly initialized
+  if (!auth || !db) {
+    console.warn("Firebase not initialized, cannot get watchlist by mood");
+    return [];
+  }
+
   const user = auth.currentUser;
   if (!user) {
     console.error("No authenticated user found");

@@ -39,6 +39,12 @@ export const migrateMoodJournalToFirestore = async (user: User): Promise<MoodEnt
     return [];
   }
 
+  // Check if Firestore is initialized
+  if (!db) {
+    console.warn("Firebase Firestore is not initialized, cannot migrate mood journal");
+    return [];
+  }
+
   try {
     const savedEntries = localStorage.getItem('moodJournalEntries');
     if (!savedEntries) return [];
@@ -80,6 +86,12 @@ export const migrateWatchlistToFirestore = async (user: User): Promise<Movie[]> 
     return [];
   }
 
+  // Check if Firestore is initialized
+  if (!db) {
+    console.warn("Firebase Firestore is not initialized, cannot migrate watchlist");
+    return [];
+  }
+
   try {
     const savedWatchlist = localStorage.getItem('feelingFlicks_watchlist');
     if (!savedWatchlist) return [];
@@ -118,6 +130,12 @@ export const migrateWatchlistToFirestore = async (user: User): Promise<Movie[]> 
 export const migrateUserData = async (user: User) => {
   if (!user) {
     console.error("No authenticated user found for migration");
+    return { moodEntries: [], watchlist: [] };
+  }
+  
+  // Check if Firestore is initialized
+  if (!db) {
+    console.warn("Firebase Firestore is not initialized, cannot migrate user data");
     return { moodEntries: [], watchlist: [] };
   }
   
